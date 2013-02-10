@@ -1,0 +1,10 @@
+name:  sample_pubspec
+description:  A sample application
+
+dependencies:
+  unittest: 0.3.4
+  browser: any
+  dart_rtc_common:
+    git: git://github.com/samiy-xx/dart_rtc_common.git
+  dart_rtc_client:
+    git: git://github.com/samiy-xx/dart_rtc_client.git
