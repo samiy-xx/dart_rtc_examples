@@ -6,6 +6,7 @@ import 'package:dart_rtc_client/rtc_client.dart';
 
 
 void main() {
+  int channelLimit = 10;
   Element c = query("#container");
   Notifier notifier = new Notifier();
   DivElement chat_output = query("#chat_output");
@@ -41,8 +42,16 @@ void main() {
     }
   });
   
-  qClient.onInitializedEvent.listen((InitializedEvent e) => notifier.display(e.message));
+  qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
+    
+    if (e.state == InitializationState.CHANNEL_READY) {
+      if (!qClient.setChannelLimit(channelLimit)) {
+        notifier.display("Failed to set new channel user limit");
+      }
+    }
+  });
   qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {                                                         
+    
     notifier.display("Signaling connected to server ${e.message}");
     chat_input.contentEditable = "true";
     chat_input.classes.remove("input_inactive");
@@ -50,6 +59,8 @@ void main() {
     var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Connected to server");
     chat_output.append(entry);
     chat_output.scrollTop = chat_output.scrollHeight;
+    
+    
   });
   
   qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {

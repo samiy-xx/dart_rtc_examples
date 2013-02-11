@@ -35,22 +35,25 @@ void main() {
     remoteVideo.height = h;
   });
   
-  qClient.onInitializedEvent.listen((InitializedEvent e) => notifier.display(e.message));
+  qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
+     
+  });
+  
   qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) => notifier.display("Signaling connected to server ${e.message}"));
   qClient.onQueueEvent.listen((QueueEvent e) => notifier.display("Queue ${e.position}"));
   
   qClient.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
-    if (e.pw == null) {
+    if (e.isLocal) {
       notifier.display("Display local stream");
       remoteVideo.style.display = "none";
       remoteVideo.pause();
       localVideo.style.display = "block";
-      localVideo.src = Url.createObjectUrl(e.ms);
+      localVideo.src = Url.createObjectUrl(e.stream);
     } else {
       notifier.display("Display remote stream");
       localVideo.pause();
       localVideo.style.display = "none";
-      remoteVideo.src = Url.createObjectUrl(e.ms);
+      remoteVideo.src = Url.createObjectUrl(e.stream);
       remoteVideo.style.display = "block";
     }
   });

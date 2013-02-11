@@ -6,6 +6,7 @@ import 'package:dart_rtc_client/rtc_client.dart';
 
 
 void main() {
+  int channelLimit = 5;
   Element c = query("#container");
   Notifier notifier = new Notifier();
   WebVideoManager vm = new WebVideoManager();
@@ -19,15 +20,27 @@ void main() {
   .setRequireVideo(true)
   .setRequireDataChannel(false);
   
-  qClient.onInitializedEvent.listen((InitializedEvent e) => notifier.display(e.message));
-  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) => notifier.display("Signaling connected to server ${e.message}"));
+  
+  qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
+    
+    if (e.state == InitializationState.CHANNEL_READY) {
+      if (!qClient.setChannelLimit(channelLimit)) {
+        notifier.display("Failed to set new channel user limit");
+      }
+    }
+  });
+  
+  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
+    notifier.display("Signaling connected to server ${e.message}");
+    qClient.setChannelLimit(channelLimit);
+  });
  
   qClient.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
-    if (e.pw == null) {
-      vm.setLocalStream(e.ms);
-      vc.setStream(e.ms);
+    if (e.isLocal) {
+      vm.setLocalStream(e.stream);
+      vc.setStream(e.stream);
     } else {
-      vm.addStream(e.ms, e.pw.id);
+      vm.addStream(e.stream, e.peerWrapper.id);
     }
   });
   
