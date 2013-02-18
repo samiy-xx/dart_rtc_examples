@@ -4,8 +4,11 @@ import '../lib/demo_client.dart';
 import 'package:dart_rtc_common/rtc_common.dart';
 import 'package:dart_rtc_client/rtc_client.dart';
 
-// You need the Queue server running for this.
-// dart start_queue.dart
+/*
+ * Queue server required for this
+ * dart start_queue.dart
+ */
+
 void main() {
   VideoElement localVideo = query("#local_video");
   VideoElement remoteVideo = query("#remote_video");
