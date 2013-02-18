@@ -32,9 +32,17 @@ void main() {
         List<String> l = chat_input.text.split(" ");
         String target = l[1];
         List<String> remains = l.getRange(2, l.length - 2);
-        if (qClient.peerManager.findWrapper(target) == null)
-          qClient.createPeerConnection(target);
-        qClient.sendPeerUserMessage(target, remains.join(" "));
+        try {
+          // Copypaste the name of the target seems to cause interesting effects
+          // try catch to quick fix =)
+
+          if (target != qClient.myId) {
+            print("$target ${qClient.myId}");
+            if (qClient.peerManager.findWrapper(target) == null)
+              qClient.createPeerConnection(target);
+            qClient.sendPeerUserMessage(target, remains.join(" "));
+          }
+        } catch(e){}
       } else {
         qClient.sendChannelMessage(chat_input.text);
       }
