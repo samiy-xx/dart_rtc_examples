@@ -128,7 +128,7 @@ class WebVideoManager extends VideoManager {
    */
   VideoContainer createContainer(String id) {
     var v = new WebVideoContainer(this, id);
-    v.matcher.on.click.add(_onContainerClick);
+    v.matcher.onClick.listen(_onContainerClick);
     _containers.add(v);
     return v;
   }
