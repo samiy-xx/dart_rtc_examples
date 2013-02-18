@@ -15,11 +15,11 @@ void main() {
   WebVideoContainer vc = vm.addVideoContainer("main_user", "main");
 
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
-  .setChannel("abc")
+  //.setChannel("abc")
   .setRequireAudio(true)
   .setRequireVideo(true)
-  .setRequireDataChannel(false);
-
+  .setRequireDataChannel(false)
+  .setAutoCreatePeer(true);
 
   qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
 
@@ -28,7 +28,9 @@ void main() {
         notifier.display("Failed to set new channel user limit");
       }
     }
+
     if (e.state == InitializationState.REMOTE_READY) {
+      notifier.display("Joining channel abc");
       qClient.joinChannel("abc");
     }
   });

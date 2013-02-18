@@ -16,7 +16,7 @@ void main() {
   final int KEY_ENTER = 13;
 
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
-  .setChannel("abc")
+  //.setChannel("abc")
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true);

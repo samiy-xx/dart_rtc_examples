@@ -20,7 +20,7 @@
       border: 1px solid #000;
       padding: 5px;
     }
-    
+
     #container {
       position: relative;
       margin: 5px;
@@ -33,7 +33,7 @@
       width: 600px;
     }
     #queue {
-      
+
       position: relative;
       margin: 5px;
       min-height: 30px;
@@ -42,7 +42,7 @@
       border: 1px solid #000;
       display: table;
     }
-    
+
     .queue_item {
       width: 100%;
       cursor: pointer;
@@ -52,7 +52,7 @@
       height: 28px;
       line-height: 28px;
       background: #ddd;
-      display: table-row; 
+      display: table-row;
     }
     .queue_item span {
       border-top: 1px solid #fff;
@@ -73,25 +73,25 @@
     .queue_item_action {
       width: 100px;
     }
-   
+
   </style>
   <body>
-    <div id="wrapper"> 
+    <div id="wrapper">
       <div id="header">
-        <h2>QueueOnline</h2>  
+        <h2>QueueOnline</h2>
       </div>
       <div id="container">
         <video id="local_video" autoplay></video>
         <video id="remote_video" autoplay></video>
       </div>
       <div id="controls">
-        
+
       </div>
       <div id="queue">
-        
+
        </div>
      </div>
-    <script type="application/dart" src="queue_sample.dart"></script>
+    <script type="application/dart" src="queue_video_sample.dart"></script>
     <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
     <script src="packages/browser/dart.js"></script>
   </body>
