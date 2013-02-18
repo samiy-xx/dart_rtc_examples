@@ -12,46 +12,51 @@ void main() {
   DivElement chat_output = query("#chat_output");
   DivElement chat_input = query("#chat_input");
   DivElement chat_users = query("#chat_users");
-  
+
   final int KEY_ENTER = 13;
-  
+
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setChannel("abc")
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true);
-  
+
   chat_input.onKeyUp.listen((KeyboardEvent e) {
     if (e.keyCode == KEY_ENTER) {
-      
+
       var entry = createChatEntry(new DateTime.now().toString(), "ME", chat_input.text);
       chat_output.append(entry);
       chat_output.scrollTop = chat_output.scrollHeight;
-      
+
       if (chat_input.text.startsWith("/")) {
         List<String> l = chat_input.text.split(" ");
         String target = l[1];
         List<String> remains = l.getRange(2, l.length - 2);
+        if (qClient.peerManager.findWrapper(target) == null)
+          qClient.createPeerConnection(target);
         qClient.sendPeerUserMessage(target, remains.join(" "));
       } else {
         qClient.sendChannelMessage(chat_input.text);
       }
-      
+
       chat_input.text = "";
       return;
     }
   });
-  
+
   qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
-    
+
     if (e.state == InitializationState.CHANNEL_READY) {
       if (!qClient.setChannelLimit(channelLimit)) {
         notifier.display("Failed to set new channel user limit");
       }
     }
+    if (e.state == InitializationState.REMOTE_READY) {
+      qClient.joinChannel("abc");
+    }
   });
-  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {                                                         
-    
+  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
+
     notifier.display("Signaling connected to server ${e.message}");
     chat_input.contentEditable = "true";
     chat_input.classes.remove("input_inactive");
@@ -59,10 +64,10 @@ void main() {
     var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Connected to server");
     chat_output.append(entry);
     chat_output.scrollTop = chat_output.scrollHeight;
-    
-    
+
+
   });
-  
+
   qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
     notifier.display("Signaling connection to server has closed (${e.message})");
     chat_input.classes.remove("input_active");
@@ -77,9 +82,9 @@ void main() {
       qClient.initialize();
     }, 10000);
   });
-  
+
   qClient.onPacketEvent.listen((PacketEvent e) {
-    
+
     if (e.type == PacketType.CHANNELMESSAGE) {
       ChannelMessage cm = e.packet as ChannelMessage;
       var entry = createChatEntry(new DateTime.now().toString(), cm.id, cm.message);
@@ -96,18 +101,18 @@ void main() {
       chat_output.scrollTop = chat_output.scrollHeight;
       notifier.display("Private peer message from ${um.id}");
     } else if (e.type == PacketType.ID) {
-      
+
       IdPacket id = e.packet as IdPacket;
       DivElement u = createUserEntry(id.id);
       chat_users.append(u);
-      
+
       u.onDoubleClick.listen((MouseEvent e) {
         if (chat_input.text == "") {
           chat_input.text = "/msg ${u.id}";
         }
       });
     } else if (e.type == PacketType.JOIN) {
-      
+
       JoinPacket join = e.packet as JoinPacket;
       DivElement u = createUserEntry(join.id);
       chat_users.append(u);
@@ -125,29 +130,29 @@ void main() {
       chat_output.append(entry);
     }
   });
-  qClient.initialize(); 
+  qClient.initialize();
 }
 
 DivElement createChatEntry(String time, String id, String message) {
   DivElement entry = new DivElement();
   entry.classes.add("output_entry");
-  
+
   var span_time = new SpanElement();
   span_time.classes.add("timestamp");
   span_time.appendText(time);
-  
+
   var span_name = new SpanElement();
   span_name.classes.add("name");
   span_name.appendText("< $id >");
-  
+
   var span_message = new SpanElement();
   span_message.classes.add("message");
   span_message.appendText(message);
-  
+
   entry.append(span_time);
   entry.append(span_name);
   entry.append(span_message);
-  
+
   return entry;
 }
 DivElement createPrivateEntry(String time, String id, String message) {
@@ -157,23 +162,23 @@ DivElement createPrivateEntry(String time, String id, String message) {
   var span_time = new SpanElement();
   span_time.classes.add("timestamp");
   span_time.appendText(time);
-  
+
   var span_name = new SpanElement();
   span_name.classes.add("name");
   span_name.appendText("(PM)< $id >");
-  
+
   var span_message = new SpanElement();
   span_message.classes.add("message");
   span_message.appendText(message);
-  
+
   entry.append(span_time);
   entry.append(span_name);
   entry.append(span_message);
-  
+
   return entry;
 }
 void pruneEntries() {
-  
+
 }
 
 DivElement createUserEntry(String id) {
