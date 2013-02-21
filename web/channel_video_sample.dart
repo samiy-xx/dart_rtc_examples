@@ -1,4 +1,5 @@
 import "dart:html";
+import "dart:async";
 import '../lib/demo_client.dart';
 
 import 'package:dart_rtc_common/rtc_common.dart';
@@ -56,10 +57,11 @@ void main() {
 
   qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
     notifier.display("Signaling connection to server has closed (${e.message})");
-    window.setTimeout(() {
+
+    new Timer(const Duration(milliseconds: 10000), () {
       notifier.display("Attempting to reconnect to server");
       qClient.initialize();
-    }, 10000);
+    });
   });
 
   qClient.initialize();

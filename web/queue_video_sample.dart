@@ -1,4 +1,5 @@
 import "dart:html";
+import "dart:async";
 import '../lib/demo_client.dart';
 
 import 'package:dart_rtc_common/rtc_common.dart';
@@ -24,7 +25,7 @@ void main() {
   .setRequireDataChannel(false);
 
   localVideo.onCanPlay.listen((_) => localVideo.play());
-  localVideo.onDoubleClick.listen((_) => localVideo.webkitRequestFullscreen());
+  localVideo.onDoubleClick.listen((_) => localVideo.requestFullscreen());
   localVideo.onLoadedMetadata.listen((Event e) {
     int h = Util.getHeight(c.clientWidth, Util.aspectRatio(localVideo.videoWidth, localVideo.videoHeight));
     localVideo.width = c.clientWidth;
@@ -32,7 +33,7 @@ void main() {
   });
 
   remoteVideo.onCanPlay.listen((_) => remoteVideo.play());
-  remoteVideo.onDoubleClick.listen((_) => remoteVideo.webkitRequestFullscreen());
+  remoteVideo.onDoubleClick.listen((_) => remoteVideo.requestFullscreen());
   remoteVideo.onLoadedMetadata.listen((Event e) {
     int h = Util.getHeight(c.clientWidth, Util.aspectRatio(remoteVideo.videoWidth, remoteVideo.videoHeight));
     remoteVideo.width = c.clientWidth;
@@ -76,10 +77,10 @@ void main() {
 
   qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
     notifier.display("Signaling connection to server has closed (${e.message})");
-    window.setTimeout(() {
+    new Timer(const Duration(milliseconds: 10000), () {
       notifier.display("Attempting to reconnect to server");
       qClient.initialize();
-    }, 10000);
+    });
   });
 
   qClient.onPacketEvent.listen((PacketEvent e) {
@@ -111,7 +112,7 @@ void main() {
 class QueueMonitor {
   Element _container;
   List<QueueUser> _items;
-  int _loopId;
+  Timer _timer;
 
   QueueMonitor(Element e) {
     _container = e;
@@ -125,10 +126,10 @@ class QueueMonitor {
     if (_items == null)
       return;
 
-    _loopId = window.setInterval(update, 1000);
+    _timer = new Timer.repeating(const Duration(seconds: 1), update);
   }
 
-  void update() {
+  void update(Timer t) {
     _container.nodes.clear();
     _items.forEach((QueueUser u) {
       addNode(u);

@@ -5,38 +5,37 @@ part of demo_client;
 class Notifier {
   /* singleton instance */
   static Notifier _instance;
-  
+
   /* id of the dom element to create */
   String _elementId = "#xzy_notifier";
-  
+
   /* div element */
   DivElement _element;
-  
+
   /* Where the text goes */
   HeadingElement _text;
-  
+
   /* Height of the notify */
   int _height = 60;
-  
-  /* interval id */
-  int _id;
-  
-  /* loop interval */ 
+
+  Timer _timer;
+
+  /* loop interval */
   int _interval = 300;
-  
+
   /* timeout after last message shown */
   int _timeout = 4000;
-  
+
   /* Is element visible */
   bool _visible = false;
-  
+
   /* List of messages */
   List<Message> _messages;
-  
+
   /** Notify element */
   Element get element => _element;
-  
-  
+
+
   /**
    * Factory constructor
    */
@@ -45,7 +44,7 @@ class Notifier {
       _instance = new Notifier._internal();
     return _instance;
   }
-  
+
   /**
    * Internal constructor
    */
@@ -53,9 +52,9 @@ class Notifier {
     DivElement e;
     try {
       e = query(_elementId);
-    } catch(e) { 
+    } catch(e) {
     }
-    
+
     if (e == null) {
       e = new DivElement();
       e.id = _elementId;
@@ -65,14 +64,14 @@ class Notifier {
     setInitialStyle();
     _messages = new List<Message>();
   }
-  
+
   /**
    * Sets the background color
    */
   void setBackground(String bg) {
     _element.style.background = bg;
   }
-  
+
   /**
    * Sets the size of the notification
    */
@@ -82,7 +81,7 @@ class Notifier {
     _element.style.width = generateCssWidth(document.documentElement.clientWidth);
     _element.style.height = generateCssWidth(_height);
   }
-  
+
   /**
    * Sets the initial style
    */
@@ -100,33 +99,33 @@ class Notifier {
     _element.children.add(_text);
     setSize();
   }
-  
+
   /**
    * Generates a css friendly unit ie. 100px
    */
   String generateCssWidth(int w) {
     StringBuffer buffer = new StringBuffer();
-    buffer.add(w.toString());
-    buffer.add("px");
+    buffer.write(w.toString());
+    buffer.write("px");
     return buffer.toString();
   }
-  
+
   /**
    * get the first message in queue and assign it to the dom element
    */
   bool popMessage() {
     if (_messages.isEmpty)
       return false;
-    
+
     Message m = _messages.removeAt(0);
     _text.text = m.message;
-      
+
     if (m.callback != null)
       m.callback();
-      
+
     return true;
   }
-  
+
   /**
    * Pops up the notification
    * sets a interval
@@ -134,38 +133,37 @@ class Notifier {
   void popup() {
     _visible = true;
     _element.style.display = "block";
-    if (_id != null)
-      window.clearInterval(_id);
-    
+    if (_timer != null)
+      _timer.cancel();
+
     popMessage();
     int i = 0;
-    
-    _id = window.setInterval(() {
+    _timer = new Timer.repeating(const Duration(milliseconds: 300), (Timer t) {
       if (!popMessage()) {
         i++;
       } else {
-        
+
       }
-      
+
       if (i >= 5) {
         i = 0;
         hide();
       }
-    }, _interval);
+    });
   }
-  
+
   /**
    * Hides the notification and clears interval
    */
   void hide() {
-    if (_id != null) {
-      window.clearInterval(_id);
-      _id = null;
+    if (_timer != null) {
+      _timer.cancel();
+      _timer = null;
     }
     _visible = false;
     _element.style.display = "none";
   }
-  
+
   /**
    * Adds a message to the queue and pops up the notification if not visible
    * @param message a string message to display
@@ -177,7 +175,7 @@ class Notifier {
     if (!_visible)
       popup();
   }
-  
+
 }
 
 class Message {

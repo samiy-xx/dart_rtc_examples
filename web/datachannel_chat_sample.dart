@@ -1,10 +1,11 @@
 import "dart:html";
+import "dart:async";
 import '../lib/demo_client.dart';
 
 import 'package:dart_rtc_common/rtc_common.dart';
 import 'package:dart_rtc_client/rtc_client.dart';
-
-
+//import '../../dart_rtc_common/lib/rtc_common.dart';
+//import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
   int channelLimit = 10;
   Element c = query("#container");
@@ -38,8 +39,9 @@ void main() {
 
           if (target != qClient.myId) {
             print("$target ${qClient.myId}");
-            if (qClient.peerManager.findWrapper(target) == null)
+            if (qClient.peerManager.findWrapper(target) == null) {
               qClient.createPeerConnection(target);
+            }
             qClient.sendPeerUserMessage(target, remains.join(" "));
           }
         } catch(e){}
@@ -85,10 +87,12 @@ void main() {
     var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Disconnected from server");
     chat_output.append(entry);
     chat_output.scrollTop = chat_output.scrollHeight;
-    window.setTimeout(() {
+
+    new Timer(const Duration(milliseconds: 10000), () {
       notifier.display("Attempting to reconnect to server");
       qClient.initialize();
-    }, 10000);
+    });
+
   });
 
   qClient.onPacketEvent.listen((PacketEvent e) {
@@ -201,7 +205,8 @@ DivElement createUserEntry(String id) {
 void removeUserEntry(DivElement e, String id) {
   for (int i = 0; i < e.nodes.length; i++) {
     Element element = e.nodes[i];
-    if (element.id == id)
+    if (element.id == id) {
       e.nodes.removeAt(i);
+    }
   }
 }
