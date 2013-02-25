@@ -2,9 +2,8 @@ import "dart:html";
 import "dart:async";
 import '../lib/demo_client.dart';
 
-import 'package:dart_rtc_common/rtc_common.dart';
-import 'package:dart_rtc_client/rtc_client.dart';
-
+//import 'package:dart_rtc_client/rtc_client.dart';
+import '../../dart_rtc_client/lib/rtc_client.dart';
 
 void main() {
   int channelLimit = 5;
