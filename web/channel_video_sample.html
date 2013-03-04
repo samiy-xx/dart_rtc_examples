@@ -5,27 +5,27 @@
     <title>channel_video_sample</title>
     <link rel="stylesheet" href="css/channel_video_sample.css">
   </head>
- 
-  <body>   
+
+  <body>
     <div id="header">
-      <h2>Channel video sample</h2>  
+      <h2>Channel video sample</h2>
     </div>
-    <div id="wrapper"> 
-      
+    <div id="wrapper">
+
       <div id="container">
         <div id="main"></div>
         <div id="aux"></div>
       </div>
-      
+
      </div>
     <script type="text/javascript">
       // Tip of the day. Specify this function to stop automatic execution of the dart js code
       function dartMainRunner(start) {
-          RTCPeerConnection = webkitRTCPeerConnection;
+          //RTCPeerConnection = webkitRTCPeerConnection;
           start();
       }
     </script>
-    
+
     <script type="text/javascript" src="features.js"></script>
     <script type="application/dart" src="channel_video_sample.dart"></script>
     <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
