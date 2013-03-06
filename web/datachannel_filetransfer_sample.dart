@@ -262,7 +262,9 @@ class FileManager {
   }
   
   void writeBuffer(ArrayBuffer buffer, String name) {
-    Blob b = new Blob([BinaryData.stringFromBuffer(buffer)]);
+    //Blob b = new Blob([BinaryData.stringFromBuffer(buffer)]);
+    Blob b = new Blob([new Uint8Array.fromBuffer(buffer)]);
+    print("Saving blob ${b.size} bytes");
     saveBlob(b, name);
   }
 
