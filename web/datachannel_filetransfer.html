@@ -3,10 +3,29 @@
 <html>
   <head>
     <title>datachannel_filetransfer</title>
+    <link rel="stylesheet" href="css/datachannel_filetransfer.css">
   </head>
 
   <body>
     <input type="file" id="file"></input>
+
+    <div id="header">
+      <h2>Datachannel enabled filetransfer application (very slow)</h2>
+    </div>
+
+    <div id="wrapper">
+      <div class="container container_left">
+        <div id="local_files"></div>
+      </div>
+      <div class="container container_middle">
+        <button id="copy">&lt;--</button>
+        <button id="remove">Remove</button>
+      </div>
+      <div class="container container_right">
+        <div id="remote_files"></div>
+      </div>
+      <div style="clear: both"></div>
+    </div>
     <div id="output"></div>
     <script type="application/dart" src="datachannel_filetransfer_sample.dart"></script>
     <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->

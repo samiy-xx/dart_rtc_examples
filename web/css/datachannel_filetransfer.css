@@ -1,0 +1,114 @@
+body {
+  margin: 0px;
+  padding: 0px;
+  text-align:center;
+}
+
+#wrapper {
+  width: 800px;
+  text-align: left;
+  margin: 0px;
+  margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid #666;
+  background: #eee;
+  -moz-box-shadow: 0 0 5px #888;
+  -webkit-box-shadow: 0 0 5px#888;
+  box-shadow: 0 0 5px #888;
+}
+
+#header {
+  margin: 5px;
+  width: 800px;
+  text-align: left;
+  margin: 0px;
+  margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#footer {
+  margin: 5px;
+  width: 800px;
+  text-align: left;
+  margin: 0px;
+  margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#footer p {
+  margin: 2px;
+}
+#header h2 {
+  margin: 0px;
+  padding: 0px;
+}
+
+#local_files {
+  height: 300px;
+  overflow: auto;
+  border: 1px solid #666;r
+  margin: 5px;
+  background: #fff;
+  display: table;
+}
+
+#remote_files {
+  width: 350px;
+  height: 300px;
+  background: #fff;
+  overflow: auto;
+  border: 1px solid #666;
+  margin: 5px;
+  display: table;
+}
+
+.file_entry_row {
+  display: table-row;
+  padding: 2px;
+  margin: 2px;
+  height: 20px;
+  text-align: left;
+}
+
+.file_entry_row:nth-child(odd) {
+  background: #eeE;
+}
+
+.file_entry_column {
+  display: table-cell;
+}
+
+.file_entry_select {
+  width: 20px;
+}
+
+.file_entry_name {
+  width: 250px;
+}
+
+.file_entry_size {
+  width: 70px;
+}
+
+.container {
+  display: inline;
+}
+
+.container_left {
+  width: 40%;
+  height: 100%;
+  float: left;
+}
+
+.container_middle {
+  width: 10%;
+  height: 100%;
+  float: left;
+}
+
+.container_right {
+  width: 40%;
+  float: left;
+  height: 100%;
+}
