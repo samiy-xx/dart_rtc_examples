@@ -171,7 +171,7 @@ class Notifier {
    */
   void display(String message, [Function callback]) {
     setSize();
-    _messages.addLast(new Message(message, callback));
+    _messages.add(new Message(message, callback));
     if (!_visible)
       popup();
   }

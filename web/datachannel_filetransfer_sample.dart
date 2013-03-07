@@ -19,6 +19,8 @@ void main() {
   ButtonElement removeButton = query("#remove");
   DivElement local_files = query("#local_files");
   DivElement remote_files = query("#remote_files");
+  DivElement bottom = query("#bottom");
+  
   EntryManager em = new EntryManager(local_files, remote_files);
   FileManager fm = new FileManager(em);
   
@@ -80,10 +82,8 @@ void main() {
     }
   });
 
-  qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
-    if (e.state == PEER_STABLE) {
-      otherId = e.peerwrapper.id;
-
+  qClient.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {
+    if (e.state == "connected") {
       fm.getEntries().then((List<Entry> entries) {
         for (Entry entry in entries) {
           entry.getMetadata((Metadata m) {
@@ -94,9 +94,28 @@ void main() {
     }
   });
   
+  qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
+    if (e.state == PEER_STABLE) {
+      otherId = e.peerwrapper.id;
+      
+      
+      
+    }
+  });
+  
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryChunkEvent) {
       BinaryChunkEvent bce = e;
+      if (bottom.nodes.length == 0) {
+        ProgressElement pe = new ProgressElement();
+        pe.max = bce.totalSequences;
+        pe.value = bce.sequence;
+        bottom.append(pe);
+      } else {
+        ProgressElement pe = bottom.query("progress");
+        pe.value = bce.sequence;
+      }
+      
     }
 
     else if (e is BinarySendCompleteEvent) {
@@ -107,6 +126,7 @@ void main() {
       BinaryBufferCompleteEvent bbc = e;
       fm.writeBuffer(bbc.buffer, currentRequestedFile);
       currentRequestedFile = null;
+      bottom.nodes.clear();
     }
 
     else if (e is BinaryPeerPacketEvent) {
@@ -117,9 +137,13 @@ void main() {
           em.appendToRemoteFiles(dep.fileName, dep.fileSize);
           break;
         case PeerPacket.TYPE_REQUEST_FILE:
+          
           RequestFilePacket rfp = e.peerPacket;
+          new Logger().Debug("Remote requested file ${rfp.fileName}");
           fm.readFile(rfp.fileName).then((ArrayBuffer buffer) {
-            qClient.sendArrayBuffer(otherId, buffer);
+            qClient.sendArrayBuffer(otherId, buffer).then((bool b) {
+              new Logger().Debug("FILE SENT");
+            });
           });
           break;
         default:
