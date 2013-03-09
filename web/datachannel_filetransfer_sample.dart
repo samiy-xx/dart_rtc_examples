@@ -1,5 +1,7 @@
 import "dart:html";
 import "dart:async";
+import "dart:crypto";
+
 import '../lib/demo_client.dart';
 
 //import 'package:dart_rtc_common/rtc_common.dart';
@@ -9,50 +11,21 @@ import '../../dart_rtc_common/lib/rtc_common.dart';
 
 typedef void onClear();
 typedef void onEntry(String name, int size);
+typedef void entryRequest(String name);
 
 void main() {
   int channelLimit = 2;
+  int receivedTotal = 0;
   String otherId;
   String currentRequestedFile = null;
-  FileUploadInputElement fuie = query("#file");
-  ButtonElement copyButton = query("#copy");
-  ButtonElement removeButton = query("#remove");
-  DivElement local_files = query("#local_files");
-  DivElement remote_files = query("#remote_files");
-  DivElement bottom = query("#bottom");
-  
-  EntryManager em = new EntryManager(local_files, remote_files);
-  FileManager fm = new FileManager(em);
+  EntryManager em = new EntryManager();
+  FileManager fm = new FileManager();
   
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true)
   .setAutoCreatePeer(true);
-  
-  copyButton.onClick.listen((MouseEvent e) {
-    List<String> files = em._selectedRemoteFiles;
-    if (files.length > 0) {
-      if (currentRequestedFile == null) {
-        currentRequestedFile = files[0];
-        qClient.sendPeerPacket(otherId, new RequestFilePacket(files[0]));
-      } 
-    }
-  });
-  
-  removeButton.onClick.listen((MouseEvent e) {
-    List<String> files = em._selectedLocalFiles;
-    fm.removeFiles(files);
-  });
-  
-  fuie.onChange.listen((Event e) {
-    for (int i = 0; i < fuie.files.length; i++) {
-      File file = fuie.files[i];
-      
-      fm.saveFile(file);
-      qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(file.name, file.size));
-    }
-  });
   
   qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
     if (e.state == InitializationState.CHANNEL_READY) {
@@ -74,16 +47,9 @@ void main() {
     });
   });
 
-  qClient.onPacketEvent.listen((PacketEvent e) {
-    print("packet ${e.type.toString()}");
-    if (e.type.toString() == PacketType.ID.toString() || e.type.toString() == PacketType.JOIN.toString()) {
-      print("assigning id ${e.packet.id}");
-      //otherId = e.packet.id;
-    }
-  });
-
   qClient.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {
-    if (e.state == "connected") {
+    print("Datachannel state change ${e.state}");
+    if (e.state == "open") {
       fm.getEntries().then((List<Entry> entries) {
         for (Entry entry in entries) {
           entry.getMetadata((Metadata m) {
@@ -97,25 +63,16 @@ void main() {
   qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
     if (e.state == PEER_STABLE) {
       otherId = e.peerwrapper.id;
-      
-      
-      
     }
   });
   
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryChunkEvent) {
       BinaryChunkEvent bce = e;
-      if (bottom.nodes.length == 0) {
-        ProgressElement pe = new ProgressElement();
-        pe.max = bce.totalSequences;
-        pe.value = bce.sequence;
-        bottom.append(pe);
-      } else {
-        ProgressElement pe = bottom.query("progress");
-        pe.value = bce.sequence;
-      }
-      
+      receivedTotal += bce.bytes;
+      em.setProgressCompletion(receivedTotal, bce.bytesTotal);
+      em.setProgressMax(bce.totalSequences);
+      em.setProgressValue(bce.sequence);
     }
 
     else if (e is BinarySendCompleteEvent) {
@@ -126,7 +83,7 @@ void main() {
       BinaryBufferCompleteEvent bbc = e;
       fm.writeBuffer(bbc.buffer, currentRequestedFile);
       currentRequestedFile = null;
-      bottom.nodes.clear();
+      receivedTotal = 0;
     }
 
     else if (e is BinaryPeerPacketEvent) {
@@ -152,36 +109,159 @@ void main() {
     }
   });
 
+  fm.entryCallback = (String name, int size) {
+    qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(name, size));
+  };
+  
+  em.onEntryRequest = (String name) {
+    currentRequestedFile = name;
+    qClient.sendPeerPacket(otherId, new RequestFilePacket(name));
+  };
+  
   qClient.initialize();
 }
 
 class EntryManager {
+  static EntryManager _instance;
   Element _localFiles;
   Element _remoteFiles;
+  Element _buttonAddFiles;
+  Element _buttonRemoveFiles;
+  Element _buttonCopyFromRemote;
+  Element _abortAll;
+  Element _progressTotal;
+  ProgressElement _progressElement;
+  CheckboxInputElement _allLocal;
+  CheckboxInputElement _allRemote;
+  FileUploadInputElement _upload;
   List<String> _selectedLocalFiles;
   List<String> _selectedRemoteFiles;
+  entryRequest _entryRequestCallback;
+  set onEntryRequest(entryRequest c) => _entryRequestCallback = c;
   
-  EntryManager(this._localFiles, this._remoteFiles) {
+  factory EntryManager() {
+    if (_instance == null)
+      _instance = new EntryManager._internal();
+    
+    return _instance;
+  }
+  
+  EntryManager._internal() {
     _selectedLocalFiles = new List<String>();
     _selectedRemoteFiles = new List<String>();
+    _localFiles = query("#left");
+    _remoteFiles = query("#right");
+    _allLocal = query("#all_local");
+    _allRemote = query("#all_remote");
+    _upload = new FileUploadInputElement();
+    _upload.multiple = true;
+    _buttonAddFiles = query("#button_add_files");
+    _buttonRemoveFiles = query("#button_remove_files");
+    _buttonCopyFromRemote = query("#copy_from_remote");
+    _progressTotal = query("#progress_amount");
+    _progressElement = query("#progress_bar");
+    _abortAll = query("#abort_all");
+  
+    _setListeners();
+  }
+  
+  void _setListeners() {
+    _allLocal.onChange.listen((Event e) {
+      List<Element> checkboxes = queryAll("#left .file_select");
+      checkboxes.forEach((CheckboxInputElement input) {
+        input.checked = (e.target as CheckboxInputElement).checked;
+        input.blur();
+      });
+    });
+    
+    _allRemote.onChange.listen((Event e) {
+      List<Element> checkboxes = queryAll("#right .file_select");
+      checkboxes.forEach((CheckboxInputElement input) {
+        input.checked = (e.target as CheckboxInputElement).checked;
+      });
+    });
+    
+    _buttonAddFiles.onClick.listen((Event e) {
+      _upload.click();
+    });
+    
+    _upload.onChange.listen((Event e) {
+      for (int i = 0; i < _upload.files.length; i++) {
+        File file = _upload.files[i];
+        
+        new FileManager().saveFile(file);
+        //qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(file.name, file.size));
+      }
+    });
+    
+    _buttonRemoveFiles.onClick.listen((Event e) {
+      queryAll("#left .file_row").forEach((Element e) {
+        CheckboxInputElement i = e.query(".file_select");
+        if (i.checked) {
+          Element j = e.query(".col_name");
+          new FileManager().removeFile(j.text);
+        }
+      });
+    });
+    
+    _buttonCopyFromRemote.onClick.listen((Event e) {
+      queryAll("#right .file_row").forEach((Element e) {
+        CheckboxInputElement i = e.query(".file_select");
+        if (i.checked) {
+          Element j = e.query(".col_name");
+          print("#request file ${j.text}");
+          _entryRequestCallback(j.text);
+        }
+      });
+    });
+    
+    _abortAll.onClick.listen((Event e) {
+      
+    });
+  }
+  
+  void setProgressMax(int value) {
+    _progressElement.max = value;
+  }
+  
+  void setProgressValue(int value) {
+    _progressElement.value = value;
+  }
+  
+  void setProgressCompletion(int value, int total) {
+    _progressTotal.nodes.clear();
+    _progressTotal.appendText("$value / $total");
   }
   
   void appendToLocalFiles(String name, int size, String url) {
+    print("Append to local files");
     DivElement div = createEntry(name, size, url);
     _localFiles.append(div);
   }
   
   void appendToRemoteFiles(String name, int size) {
+    if (haveThisEntry(name))
+      return;
+    
     DivElement div = createEntry(name, size);
     _remoteFiles.append(div);
   }
   
   void clearLocalFiles() {
-    _localFiles.nodes.clear();
+    print("clear local files");
+    _localFiles.queryAll(".file_row").forEach((Element e) {
+      e.remove();
+    });
   }
   
   void clearRemoteFiles() {
-    _remoteFiles.nodes.clear();
+    _remoteFiles.queryAll(".file_row").forEach((Element e) {
+      e.remove();
+    });
+  }
+  
+  bool haveThisEntry(String name) {
+    return queryAll("#right .col_name").any((Element e) => e.text == name);
   }
   
   void removeFromLocalFiles(String name) {
@@ -215,25 +295,26 @@ class EntryManager {
   
   DivElement createEntry(String name, int size, [String url]) {
     DivElement entryDiv = new DivElement();
-    entryDiv.classes.add("file_entry_row");
+    entryDiv.classes.add("file_row");
     entryDiv.id = "div_$name";
 
     CheckboxInputElement cbx = new CheckboxInputElement();
+    cbx.classes.add("file_select");
     cbx.onChange.listen(onSelectChange);
     
     SpanElement selectSpan = new SpanElement();
-    selectSpan.classes.add("file_entry_column");
-    selectSpan.classes.add("file_entry_select");
+    selectSpan.classes.add("col_check");
+    selectSpan.classes.add("file_col");
     selectSpan.append(cbx);
 
     SpanElement fileNameSpan = new SpanElement();
-    fileNameSpan.classes.add("file_entry_column");
-    fileNameSpan.classes.add("file_entry_name");
+    fileNameSpan.classes.add("file_col");
+    fileNameSpan.classes.add("col_name");
     fileNameSpan.appendHtml(?url ? "<a href='$url'>$name</a>" : name);
 
     SpanElement fileSizeSpan = new SpanElement();
-    fileSizeSpan.classes.add("file_entry_column");
-    fileSizeSpan.classes.add("file_entry_size");
+    fileSizeSpan.classes.add("file_col");
+    fileSizeSpan.classes.add("col_size");
     fileSizeSpan.appendText(size.toString());
 
     entryDiv.append(selectSpan);
@@ -245,6 +326,7 @@ class EntryManager {
 }
 
 class FileManager {
+  static FileManager _instance;
   FileSystem _fileSystem;
   DirectoryEntry _dir;
   String _rootDir = "mydocs";
@@ -255,11 +337,20 @@ class FileManager {
   set entryCallback(onEntry c) => _entryCallback = c;
   set clearCallback(onClear c) => _clearCallback = c;
 
-  FileManager(EntryManager em) {
-    _em = em;
+  factory FileManager() {
+    if (_instance == null)
+      _instance = new FileManager._internal();
+    
+    return _instance;
+  }
+  
+  FileManager._internal() {
+    _em = new EntryManager();
     window.requestFileSystem(Window.TEMPORARY, 1024*1024*5, onFileSystem, onError);
+    
   }
 
+  
   void onFileSystem(FileSystem fs) {
     _fileSystem = fs;
 
@@ -296,6 +387,8 @@ class FileManager {
     _dir.getFile(name, options: {'create':true, 'exclusive':true}, successCallback : (FileEntry fe) {
       fe.createWriter((FileWriter fw) {
         fw.write(b);
+        _entryCallback(name, b.size);
+        print("Blob saved to disk");
         update();
       }, onError);
     }, errorCallback: onError);
@@ -305,6 +398,7 @@ class FileManager {
     _dir.getFile(f.name, options: {'create':true, 'exclusive':true}, successCallback : (FileEntry fe) {
       fe.createWriter((FileWriter fw) {
         fw.write(f);
+        _entryCallback(f.name, f.size);
         update();
       }, onError);
     }, errorCallback: onError);
@@ -349,7 +443,50 @@ class FileManager {
     }, onError);
     return completer.future;
   }
+  
   void onError(FileError e) {
-
+    String error;
+    switch (e.code) {
+      case FileError.ABORT_ERR:
+        error = "Abort error";
+        break;
+      case FileError.ENCODING_ERR:
+        error = "Encoding error";
+        break;
+      case FileError.INVALID_MODIFICATION_ERR:
+        error = "Invalid modification error";
+        break;
+      case FileError.INVALID_STATE_ERR:
+        error = "Invalid state error";
+        break;
+      case FileError.NO_MODIFICATION_ALLOWED_ERR:
+        error = "No modification allowed error";
+        break;
+      case FileError.NOT_FOUND_ERR:
+        error = "Not found error";
+        break;
+      case FileError.NOT_READABLE_ERR:
+        error = "Not readable error";
+        break;
+      case FileError.PATH_EXISTS_ERR:
+        error = "Path exists error";
+        break;
+      case FileError.QUOTA_EXCEEDED_ERR:
+        error = "Quota exceeded error";
+        break;
+      case FileError.SECURITY_ERR:
+        error = "Security error";
+        break;
+      case FileError.SYNTAX_ERR:
+        error = "Syntax error";
+        break;
+      case FileError.TYPE_MISMATCH_ERR:
+        error = "Type mismatch error";
+        break;
+      default:
+        error = "Unknown error ${e.code}";
+    }
+    
+    print("FILE Error $error");
   }
 }

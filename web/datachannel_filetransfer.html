@@ -7,29 +7,44 @@
   </head>
 
   <body>
-    <input type="file" id="file"></input>
-    
-    <div id="header">
-      <h2>Datachannel enabled filetransfer application (very slow)</h2>
+    <div id="container">
+      <div id="header">
+        <h1>Dart - P2P FileTransfer</h1>
+      </div>
+      <div id="application">
+        <div id="top_slot" class="slot">
+          <div class="progress_wrapper">
+            <progress id="progress_bar" max="100" value="0">DOwnload</progress>
+          </div>
+          <div id="progress_amount">0</div>
+        </div>
+        <div id="middle_slot" class="slot">
+          <div id="left" class="floater">
+            <div class="file_header_row">
+              <span class="col_check file_col"><input id="all_local" type="checkbox"></input></span>
+              <span class="col_name file_col">Local files</span>
+              <span class="col_size file_col"></span>
+            </div>
+            
+          </div>
+          <div id="right" class="floater">
+            <div class="file_header_row">
+              <span class="col_check file_col"><input id="all_remote" type="checkbox"></input></span>
+              <span class="col_name file_col">Remote files</span>
+              <span class="col_size file_col"></span>
+            </div>
+            
+          </div>
+          <div style="clear: both"></div>  
+        </div>
+        <div id="bottom_slot" class="slot">
+          <div id="button_add_files" class="button">Add Files</div>
+          <div id="button_remove_files" class="button">Remove selected</div>
+          <div id="copy_from_remote" class="button">Copy from remote</div>
+          <div id="abort_all" class="button">Abort active transfer</div>
+        </div>
+      </div>
     </div>
-
-    <div id="wrapper">
-      <div class="container container_left">
-        <div id="local_files"></div>
-      </div>
-      <div class="container container_middle">
-        <button id="copy">&lt;--</button>
-        <button id="remove">Remove</button>
-      </div>
-      <div class="container container_right">
-        <div id="remote_files"></div>
-      </div>
-      <div style="clear: both"></div>
-      <div id="bottom">
-        
-      </div>
-    </div>
-    <div id="output"></div>
     <script type="application/dart" src="datachannel_filetransfer_sample.dart"></script>
     <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
     <script src="packages/browser/dart.js"></script>
