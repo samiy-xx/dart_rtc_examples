@@ -50,6 +50,8 @@ void main() {
   qClient.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {
     print("Datachannel state change ${e.state}");
     if (e.state == "open") {
+      // for canary, peer state change doesnt seem to fire on canary
+      otherId = e.peerwrapper.id;
       fm.getEntries().then((List<Entry> entries) {
         for (Entry entry in entries) {
           entry.getMetadata().then((Metadata m) {
@@ -61,7 +63,9 @@ void main() {
   });
   
   qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
+    new Logger().Debug("Peer state changed to ${e.state}");
     if (e.state == PEER_STABLE) {
+      new Logger().Debug("Peer state changed to stable");
       otherId = e.peerwrapper.id;
     }
   });
@@ -90,12 +94,11 @@ void main() {
       BinaryPeerPacketEvent bppe = e;
       switch (bppe.peerPacket.packetType) {
         case PeerPacket.TYPE_DIRECTORY_ENTRY:
-          DirectoryEntryPacket dep = e.peerPacket;
+          DirectoryEntryPacket dep = e.peerPacket as DirectoryEntryPacket;
           em.appendToRemoteFiles(dep.fileName, dep.fileSize);
           break;
         case PeerPacket.TYPE_REQUEST_FILE:
-          
-          RequestFilePacket rfp = e.peerPacket;
+          RequestFilePacket rfp = e.peerPacket as RequestFilePacket;
           new Logger().Debug("Remote requested file ${rfp.fileName}");
           fm.readFile(rfp.fileName).then((ArrayBuffer buffer) {
             qClient.sendArrayBuffer(otherId, buffer).then((bool b) {
@@ -109,6 +112,11 @@ void main() {
     }
   });
 
+  fm.onFileAddedEvent.listen((TmpFile f) {
+    print("File packet send");
+    qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(f.name, f.size));
+  });
+  
   fm.entryCallback = (String name, int size) {
     qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(name, size));
   };
@@ -147,6 +155,7 @@ class EntryManager {
   }
   
   EntryManager._internal() {
+    
     _selectedLocalFiles = new List<String>();
     _selectedRemoteFiles = new List<String>();
     _localFiles = query("#left");
@@ -334,6 +343,8 @@ class FileManager {
   onEntry _entryCallback;
   onClear _clearCallback;
 
+  StreamController<TmpFile> _fileAddedStreamController;
+  Stream<TmpFile> get onFileAddedEvent  => _fileAddedStreamController.stream;
   set entryCallback(onEntry c) => _entryCallback = c;
   set clearCallback(onClear c) => _clearCallback = c;
 
@@ -346,6 +357,7 @@ class FileManager {
   
   FileManager._internal() {
     _em = new EntryManager();
+    _fileAddedStreamController = new StreamController<TmpFile>.broadcast();
     //window.requestFileSystem(Window.TEMPORARY, 1024*1024*5, onFileSystem, onError);
     window.requestFileSystem(1024*1024*5)
     .then(onFileSystem)
@@ -392,7 +404,9 @@ class FileManager {
     .then((FileEntry fe) {
       fe.createWriter().then((FileWriter fw) {
         fw.write(b);
-        _entryCallback(name, b.size);
+        //_entryCallback(name, b.size);
+        if (_fileAddedStreamController.hasSubscribers)
+          _fileAddedStreamController.add(new TmpFile(b.size, name));
         print("Blob saved to disk");
         update();
       });
@@ -409,7 +423,11 @@ class FileManager {
     .then((FileEntry fe) {
       fe.createWriter().then((FileWriter fw) {
         fw.write(f);
-        _entryCallback(f.name, f.size);
+        //_entryCallback(f.name, f.size);
+        if (_fileAddedStreamController.hasSubscribers) {
+          print ("notify listeners");
+          _fileAddedStreamController.add(new TmpFile(f.size, f.name));
+        }
         print("Blob saved to disk");
         update();
       });
@@ -432,7 +450,7 @@ class FileManager {
           completer.complete(reader.result);
         });
         reader.onProgress.listen((ProgressEvent e) {
-          
+        
         });
         reader.readAsArrayBuffer(f);
       });
@@ -530,4 +548,11 @@ class FileManager {
     
     print("FILE Error $error");
   }
+}
+
+class TmpFile {
+  int size;
+  String name;
+  
+  TmpFile(this.size, this.name);
 }
