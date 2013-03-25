@@ -27,16 +27,16 @@ void main() {
   localVideo.onCanPlay.listen((_) => localVideo.play());
   localVideo.onDoubleClick.listen((_) => localVideo.requestFullscreen());
   localVideo.onLoadedMetadata.listen((Event e) {
-    int h = Util.getHeight(c.clientWidth, Util.aspectRatio(localVideo.videoWidth, localVideo.videoHeight));
-    localVideo.width = c.clientWidth;
+    int h = Util.getHeight(c.client.width, Util.aspectRatio(localVideo.videoWidth, localVideo.videoHeight));
+    localVideo.width = c.client.width;
     localVideo.height = h;
   });
 
   remoteVideo.onCanPlay.listen((_) => remoteVideo.play());
   remoteVideo.onDoubleClick.listen((_) => remoteVideo.requestFullscreen());
   remoteVideo.onLoadedMetadata.listen((Event e) {
-    int h = Util.getHeight(c.clientWidth, Util.aspectRatio(remoteVideo.videoWidth, remoteVideo.videoHeight));
-    remoteVideo.width = c.clientWidth;
+    int h = Util.getHeight(c.client.width, Util.aspectRatio(remoteVideo.videoWidth, remoteVideo.videoHeight));
+    remoteVideo.width = c.client.width;
     remoteVideo.height = h;
   });
 
@@ -69,8 +69,8 @@ void main() {
     remoteVideo.pause();
 
     localVideo.style.display = "block";
-    int h = Util.getHeight(c.clientWidth, Util.aspectRatio(localVideo.videoWidth, localVideo.videoHeight));
-    localVideo.width = c.clientWidth;
+    int h = Util.getHeight(c.client.width, Util.aspectRatio(localVideo.videoWidth, localVideo.videoHeight));
+    localVideo.width = c.client.width;
     localVideo.height = h;
     localVideo.play();
   });
@@ -126,7 +126,7 @@ class QueueMonitor {
     if (_items == null)
       return;
 
-    _timer = new Timer.repeating(const Duration(seconds: 1), update);
+    _timer = new Timer.periodic(const Duration(seconds: 1), update);
   }
 
   void update(Timer t) {

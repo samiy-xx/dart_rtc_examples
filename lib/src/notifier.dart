@@ -78,7 +78,7 @@ class Notifier {
   void setSize() {
     _element.style.left = "0px";
     _element.style.top = "0px";
-    _element.style.width = generateCssWidth(document.documentElement.clientWidth);
+    _element.style.width = generateCssWidth(document.documentElement.client.width);
     _element.style.height = generateCssWidth(_height);
   }
 
@@ -138,7 +138,7 @@ class Notifier {
 
     popMessage();
     int i = 0;
-    _timer = new Timer.repeating(const Duration(milliseconds: 300), (Timer t) {
+    _timer = new Timer.periodic(const Duration(milliseconds: 300), (Timer t) {
       if (!popMessage()) {
         i++;
       } else {

@@ -181,7 +181,7 @@ class WebVideoManager extends VideoManager {
    */
   void setProportions(VideoContainer vc) {
     log.Debug("setProportions: ${vc.id}");
-    int width = isMain(vc) ? _mainHost.clientWidth : (_childHost.clientWidth ~/ 3) - 3;
+    int width = isMain(vc) ? _mainHost.client.width : (_childHost.client.width ~/ 3) - 3;
     int height = Util.getHeight(width, vc.aspectRatio);
     log.Debug("Width: $width Height: $height");
 

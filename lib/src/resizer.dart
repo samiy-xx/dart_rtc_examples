@@ -76,7 +76,7 @@ class Resizer {
   }
 
   void startLoop() {
-    _timer = new Timer.repeating(const Duration(milliseconds: _loopInterval), (Timer t) {
+    _timer = new Timer.periodic(const Duration(milliseconds: _loopInterval), (Timer t) {
 
       int newWidth = _width;
       int newHeight = _height;

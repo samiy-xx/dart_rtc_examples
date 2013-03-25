@@ -7,7 +7,10 @@ class FileManager extends GenericEventTarget<FileEventListener>{
   
   FileManager() {
     _files = new List<File>();
-    window.requestFileSystem(Window.TEMPORARY, 1024*1024*1024, _onFileSystemAccess, _onFileSystemAccessError);
+    window.requestFileSystem(Window.TEMPORARY, 1024*1024*1024).then((FileSystem fs) {
+      _fs = fs;
+    });
+    
   }
   
   void addFiles(List<File> f) {
@@ -16,7 +19,13 @@ class FileManager extends GenericEventTarget<FileEventListener>{
     for (int i = 0; i < f.length; i++) {
       File file = f[i];
       
-      _fs.root.getFile(
+      _fs.root.getFile(file.name, options : {'create': true, 'exclusive': true}).then((FileEntry fe) {
+        fe.createWriter().then((FileWriter fw) {
+          fw.write(file);
+          notifyFileListeners(file);
+        });
+      });
+      /*_fs.root.getFile(
           file.name,
           options : {'create': true, 'exclusive': true},
           successCallback: (FileEntry e) {
@@ -26,7 +35,7 @@ class FileManager extends GenericEventTarget<FileEventListener>{
             }, _onFileSystemAccessError);
           },
           errorCallback: _onFileSystemAccessError
-      );
+      );*/
     }
     
   }

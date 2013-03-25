@@ -52,9 +52,9 @@ void main() {
     if (e.state == "open") {
       fm.getEntries().then((List<Entry> entries) {
         for (Entry entry in entries) {
-          entry.getMetadata((Metadata m) {
+          entry.getMetadata().then((Metadata m) {
             qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(entry.name, m.size));
-          }, (FileError error) {});
+          });
         }
       });
     }
@@ -346,15 +346,19 @@ class FileManager {
   
   FileManager._internal() {
     _em = new EntryManager();
-    window.requestFileSystem(Window.TEMPORARY, 1024*1024*5, onFileSystem, onError);
-    
+    //window.requestFileSystem(Window.TEMPORARY, 1024*1024*5, onFileSystem, onError);
+    window.requestFileSystem(1024*1024*5)
+    .then(onFileSystem)
+    .catchError((AsyncError e) => onError(e.error));
   }
 
   
   void onFileSystem(FileSystem fs) {
     _fileSystem = fs;
 
-    fs.root.getDirectory(_rootDir, options : {'create' : true}, successCallback : onDirectory, errorCallback: onError);
+    //fs.root.getDirectory(_rootDir, options : {'create' : true}, successCallback : onDirectory, errorCallback: onError);
+    //fs.root.getDirectory(_rootDir, options : {'create' : true}).then(onDirectory);
+    fs.root.getDirectory(_rootDir).then(onDirectory);
   }
 
   void onDirectory(DirectoryEntry dir) {
@@ -369,44 +373,71 @@ class FileManager {
   }
   
   void removeFile(String fileName) {
-    _dir.getFile(fileName, options : {'create': false}, successCallback : (FileEntry e) {
-      e.remove(() {
-        update();
-      }, onError);
-    }, errorCallback : onError);  
+    //_dir.getFile(fileName, options : {'create': false}).then((FileEntry e) {
+    
+    _dir.getFile(fileName).then((FileEntry fe) {
+      fe.remove().then((f) => update()).catchError((AsyncError e) => onError(e.error));
+    })
+    .catchError((AsyncError e) => onError(e.error));
   }
   
   void writeBuffer(ArrayBuffer buffer, String name) {
-    //Blob b = new Blob([BinaryData.stringFromBuffer(buffer)]);
     Blob b = new Blob([new Uint8Array.fromBuffer(buffer)]);
     print("Saving blob ${b.size} bytes");
     saveBlob(b, name);
   }
 
   void saveBlob(Blob b, String name) {
-    _dir.getFile(name, options: {'create':true, 'exclusive':true}, successCallback : (FileEntry fe) {
-      fe.createWriter((FileWriter fw) {
+    _dir.createFile(name)
+    .then((FileEntry fe) {
+      fe.createWriter().then((FileWriter fw) {
         fw.write(b);
         _entryCallback(name, b.size);
         print("Blob saved to disk");
         update();
-      }, onError);
-    }, errorCallback: onError);
+      });
+    })
+    .catchError((AsyncError e) {
+      new Logger().Error("Error creating file");
+      onError(e.error);
+    });
+    
   }
 
   void saveFile(File f) {
-    _dir.getFile(f.name, options: {'create':true, 'exclusive':true}, successCallback : (FileEntry fe) {
-      fe.createWriter((FileWriter fw) {
+    _dir.createFile(f.name)
+    .then((FileEntry fe) {
+      fe.createWriter().then((FileWriter fw) {
         fw.write(f);
         _entryCallback(f.name, f.size);
+        print("Blob saved to disk");
         update();
-      }, onError);
-    }, errorCallback: onError);
+      });
+    })
+    .catchError((AsyncError e) {
+      new Logger().Error("Error creating file");
+      onError(e.error);
+    });
+    
   }
 
   Future<ArrayBuffer> readFile(String name) {
     Completer completer = new Completer();
-    _dir.getFile(name, options: {}, successCallback : (FileEntry fe) {
+    //_dir.getFile(name, options: {})
+    _dir.getFile(name)
+    .then((FileEntry fe) {
+      fe.file().then((File f) {
+        FileReader reader = new FileReader();
+        reader.onLoadEnd.listen((ProgressEvent e) {
+          completer.complete(reader.result);
+        });
+        reader.onProgress.listen((ProgressEvent e) {
+          
+        });
+        reader.readAsArrayBuffer(f);
+      });
+    });
+    /*_dir.getFile(name, options: {}, successCallback : (FileEntry fe) {
       fe.file((File f) {
         FileReader reader = new FileReader();
         reader.onLoadEnd.listen((ProgressEvent e) {
@@ -414,7 +445,7 @@ class FileManager {
         });
         reader.readAsArrayBuffer(f);
       }, onError);
-    } , errorCallback: onError);
+    } , errorCallback: onError);*/
 
     return completer.future;
   }
@@ -422,8 +453,15 @@ class FileManager {
   void update() {
     _em.clearLocalFiles();
     DirectoryReader dirReader = _dir.createReader();
-
-    dirReader.readEntries((List<Entry> entries) {
+    dirReader.readEntries().then((List<Entry> entries) {
+      for (int i = 0; i < entries.length; i++) {
+        Entry e = entries[i];
+        e.getMetadata().then((Metadata m) {
+          _em.appendToLocalFiles(e.name, m.size, e.toUrl());
+        });
+      }
+    });
+    /*dirReader.readEntries((List<Entry> entries) {
       for (int i = 0; i < entries.length; i++) {
         Entry e = entries[i];
         e.getMetadata((Metadata m) {
@@ -432,15 +470,18 @@ class FileManager {
         }, onError);
 
       }
-    }, onError);
+    }, onError);*/
   }
 
   Future<List<Entry>> getEntries() {
     Completer completer = new Completer();
     DirectoryReader dirReader = _dir.createReader();
-    dirReader.readEntries((List<Entry> entries) {
+    dirReader.readEntries().then((List<Entry> entries) {
       completer.complete(entries);
-    }, onError);
+    });
+    /*dirReader.readEntries((List<Entry> entries) {
+      completer.complete(entries);
+    }, onError);*/
     return completer.future;
   }
   

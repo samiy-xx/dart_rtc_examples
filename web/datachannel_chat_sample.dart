@@ -32,7 +32,7 @@ void main() {
       if (chat_input.text.startsWith("/")) {
         List<String> l = chat_input.text.split(" ");
         String target = l[1];
-        List<String> remains = l.getRange(2, l.length - 2);
+        List<String> remains = l.sublist(2, l.length - 2);
         try {
           // Copypaste the name of the target seems to cause interesting effects
           // try catch to quick fix =)
