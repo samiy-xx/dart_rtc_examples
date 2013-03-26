@@ -20,13 +20,13 @@ void main() {
   String currentRequestedFile = null;
   EntryManager em = new EntryManager();
   FileManager fm = new FileManager();
-  
+
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true)
   .setAutoCreatePeer(true);
-  
+
   qClient.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
     if (e.state == InitializationState.CHANNEL_READY) {
       qClient.setChannelLimit(channelLimit);
@@ -61,7 +61,7 @@ void main() {
       });
     }
   });
-  
+
   qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
     new Logger().Debug("Peer state changed to ${e.state}");
     if (e.state == PEER_STABLE) {
@@ -69,7 +69,7 @@ void main() {
       otherId = e.peerwrapper.id;
     }
   });
-  
+
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryChunkEvent) {
       BinaryChunkEvent bce = e;
@@ -116,16 +116,16 @@ void main() {
     print("File packet send");
     qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(f.name, f.size));
   });
-  
+
   fm.entryCallback = (String name, int size) {
     qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(name, size));
   };
-  
+
   em.onEntryRequest = (String name) {
     currentRequestedFile = name;
     qClient.sendPeerPacket(otherId, new RequestFilePacket(name));
   };
-  
+
   qClient.initialize();
 }
 
@@ -146,16 +146,16 @@ class EntryManager {
   List<String> _selectedRemoteFiles;
   entryRequest _entryRequestCallback;
   set onEntryRequest(entryRequest c) => _entryRequestCallback = c;
-  
+
   factory EntryManager() {
     if (_instance == null)
       _instance = new EntryManager._internal();
-    
+
     return _instance;
   }
-  
+
   EntryManager._internal() {
-    
+
     _selectedLocalFiles = new List<String>();
     _selectedRemoteFiles = new List<String>();
     _localFiles = query("#left");
@@ -170,10 +170,10 @@ class EntryManager {
     _progressTotal = query("#progress_amount");
     _progressElement = query("#progress_bar");
     _abortAll = query("#abort_all");
-  
+
     _setListeners();
   }
-  
+
   void _setListeners() {
     _allLocal.onChange.listen((Event e) {
       List<Element> checkboxes = queryAll("#left .file_select");
@@ -182,27 +182,27 @@ class EntryManager {
         input.blur();
       });
     });
-    
+
     _allRemote.onChange.listen((Event e) {
       List<Element> checkboxes = queryAll("#right .file_select");
       checkboxes.forEach((CheckboxInputElement input) {
         input.checked = (e.target as CheckboxInputElement).checked;
       });
     });
-    
+
     _buttonAddFiles.onClick.listen((Event e) {
       _upload.click();
     });
-    
+
     _upload.onChange.listen((Event e) {
       for (int i = 0; i < _upload.files.length; i++) {
         File file = _upload.files[i];
-        
+
         new FileManager().saveFile(file);
         //qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(file.name, file.size));
       }
     });
-    
+
     _buttonRemoveFiles.onClick.listen((Event e) {
       queryAll("#left .file_row").forEach((Element e) {
         CheckboxInputElement i = e.query(".file_select");
@@ -212,7 +212,7 @@ class EntryManager {
         }
       });
     });
-    
+
     _buttonCopyFromRemote.onClick.listen((Event e) {
       queryAll("#right .file_row").forEach((Element e) {
         CheckboxInputElement i = e.query(".file_select");
@@ -223,73 +223,73 @@ class EntryManager {
         }
       });
     });
-    
+
     _abortAll.onClick.listen((Event e) {
-      
+
     });
   }
-  
+
   void setProgressMax(int value) {
     _progressElement.max = value;
   }
-  
+
   void setProgressValue(int value) {
     _progressElement.value = value;
   }
-  
+
   void setProgressCompletion(int value, int total) {
     _progressTotal.nodes.clear();
     _progressTotal.appendText("$value / $total");
   }
-  
+
   void appendToLocalFiles(String name, int size, String url) {
     print("Append to local files");
     DivElement div = createEntry(name, size, url);
     _localFiles.append(div);
   }
-  
+
   void appendToRemoteFiles(String name, int size) {
     if (haveThisEntry(name))
       return;
-    
+
     DivElement div = createEntry(name, size);
     _remoteFiles.append(div);
   }
-  
+
   void clearLocalFiles() {
     print("clear local files");
     _localFiles.queryAll(".file_row").forEach((Element e) {
       e.remove();
     });
   }
-  
+
   void clearRemoteFiles() {
     _remoteFiles.queryAll(".file_row").forEach((Element e) {
       e.remove();
     });
   }
-  
+
   bool haveThisEntry(String name) {
     return queryAll("#right .col_name").any((Element e) => e.text == name);
   }
-  
+
   void removeFromLocalFiles(String name) {
-    
+
   }
-  
+
   void removeFromRemoteFiles(String name) {
-    
+
   }
-  
+
   void onSelectChange(Event e) {
     CheckboxInputElement cbx = e.target;
     DivElement parent = cbx.parent.parent;
     DivElement container = parent.parent;
     SpanElement span = parent.queryAll("span")[1];
     String fileName = span.text;
-    
+
     List<String> files = container == _localFiles ? _selectedLocalFiles : _selectedRemoteFiles;
-    
+
     if (cbx.checked) {
       if (!files.contains(fileName))
         files.add(fileName);
@@ -297,11 +297,11 @@ class EntryManager {
       int index = files.indexOf(fileName);
       if (index >= 0)
         files.removeAt(index);
-     
+
     }
     print(files.length);
   }
-  
+
   DivElement createEntry(String name, int size, [String url]) {
     DivElement entryDiv = new DivElement();
     entryDiv.classes.add("file_row");
@@ -310,7 +310,7 @@ class EntryManager {
     CheckboxInputElement cbx = new CheckboxInputElement();
     cbx.classes.add("file_select");
     cbx.onChange.listen(onSelectChange);
-    
+
     SpanElement selectSpan = new SpanElement();
     selectSpan.classes.add("col_check");
     selectSpan.classes.add("file_col");
@@ -329,7 +329,7 @@ class EntryManager {
     entryDiv.append(selectSpan);
     entryDiv.append(fileNameSpan);
     entryDiv.append(fileSizeSpan);
-    
+
     return entryDiv;
   }
 }
@@ -351,48 +351,49 @@ class FileManager {
   factory FileManager() {
     if (_instance == null)
       _instance = new FileManager._internal();
-    
+
     return _instance;
   }
-  
+
   FileManager._internal() {
     _em = new EntryManager();
     _fileAddedStreamController = new StreamController<TmpFile>.broadcast();
-    //window.requestFileSystem(Window.TEMPORARY, 1024*1024*5, onFileSystem, onError);
     window.requestFileSystem(1024*1024*5)
     .then(onFileSystem)
     .catchError((AsyncError e) => onError(e.error));
   }
 
-  
+
   void onFileSystem(FileSystem fs) {
     _fileSystem = fs;
 
-    //fs.root.getDirectory(_rootDir, options : {'create' : true}, successCallback : onDirectory, errorCallback: onError);
-    //fs.root.getDirectory(_rootDir, options : {'create' : true}).then(onDirectory);
-    fs.root.getDirectory(_rootDir).then(onDirectory);
+    fs.root.getDirectory(_rootDir)
+      .then(onDirectory)
+      .catchError((AsyncError e) {
+        fs.root.createDirectory(_rootDir).then(onDirectory);
+    });
   }
 
   void onDirectory(DirectoryEntry dir) {
     _dir = dir;
     update();
   }
-  
+
   void removeFiles(List<String> files) {
     for (String fileName in files) {
       removeFile(fileName);
     }
   }
-  
+
   void removeFile(String fileName) {
     //_dir.getFile(fileName, options : {'create': false}).then((FileEntry e) {
-    
+
     _dir.getFile(fileName).then((FileEntry fe) {
       fe.remove().then((f) => update()).catchError((AsyncError e) => onError(e.error));
     })
     .catchError((AsyncError e) => onError(e.error));
   }
-  
+
   void writeBuffer(ArrayBuffer buffer, String name) {
     Blob b = new Blob([new Uint8Array.fromBuffer(buffer)]);
     print("Saving blob ${b.size} bytes");
@@ -415,7 +416,7 @@ class FileManager {
       new Logger().Error("Error creating file");
       onError(e.error);
     });
-    
+
   }
 
   void saveFile(File f) {
@@ -436,7 +437,7 @@ class FileManager {
       new Logger().Error("Error creating file");
       onError(e.error);
     });
-    
+
   }
 
   Future<ArrayBuffer> readFile(String name) {
@@ -450,7 +451,7 @@ class FileManager {
           completer.complete(reader.result);
         });
         reader.onProgress.listen((ProgressEvent e) {
-        
+
         });
         reader.readAsArrayBuffer(f);
       });
@@ -502,7 +503,7 @@ class FileManager {
     }, onError);*/
     return completer.future;
   }
-  
+
   void onError(FileError e) {
     String error;
     switch (e.code) {
@@ -545,7 +546,7 @@ class FileManager {
       default:
         error = "Unknown error ${e.code}";
     }
-    
+
     print("FILE Error $error");
   }
 }
@@ -553,6 +554,6 @@ class FileManager {
 class TmpFile {
   int size;
   String name;
-  
+
   TmpFile(this.size, this.name);
 }
