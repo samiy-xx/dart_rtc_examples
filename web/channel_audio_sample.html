@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>channel_audio_sample</title>
+    <link rel="stylesheet" href="css/channel_audio_sample.css">
+  </head>
+
+  <body>
+    <div id="header">
+      <h2>Channel audio sample</h2>
+    </div>
+
+    <div id="wrapper">
+
+      <div id="container">
+        <div id="main"><audio id="local_audio"></audio></div>
+        <div id="aux"><audio id="remote_audio"></audio></div>
+      </div>
+
+     </div>
+    <script type="text/javascript">
+      // Tip of the day. Specify this function to stop automatic execution of the dart js code
+      function dartMainRunner(start) {
+
+          start();
+      }
+    </script>
+
+
+    <script type="application/dart" src="channel_audio_sample.dart"></script>
+    <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>
