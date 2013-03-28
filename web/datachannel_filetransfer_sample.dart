@@ -20,7 +20,9 @@ void main() {
   String currentRequestedFile = null;
   EntryManager em = new EntryManager();
   FileManager fm = new FileManager();
-
+  Element kbs = query("#kbs");
+  DateTime _start;
+  
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
@@ -72,11 +74,24 @@ void main() {
 
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryChunkEvent) {
+      if (_start == null)
+        _start = new DateTime.now();
+      
+      
       BinaryChunkEvent bce = e;
       receivedTotal += bce.bytes;
+      int elapsed = new DateTime.now().millisecondsSinceEpoch - _start.millisecondsSinceEpoch;
+      if (elapsed > 0 && receivedTotal > 0) {
+        elapsed = elapsed ~/ 1000;
+        if (elapsed > 0) {
+          int b = (receivedTotal ~/ 1024) ~/ elapsed;
+          kbs.text = "$b kbs";
+        }
+      }
       em.setProgressCompletion(receivedTotal, bce.bytesTotal);
       em.setProgressMax(bce.totalSequences);
       em.setProgressValue(bce.sequence);
+      
     }
 
     else if (e is BinarySendCompleteEvent) {
@@ -145,6 +160,7 @@ class EntryManager {
   List<String> _selectedLocalFiles;
   List<String> _selectedRemoteFiles;
   entryRequest _entryRequestCallback;
+  DateTime _start;
   set onEntryRequest(entryRequest c) => _entryRequestCallback = c;
 
   factory EntryManager() {
@@ -242,6 +258,9 @@ class EntryManager {
     _progressTotal.appendText("$value / $total");
   }
 
+  void setStartTime(DateTime start) {
+    _start = start;
+  }
   void appendToLocalFiles(String name, int size, String url) {
     print("Append to local files");
     DivElement div = createEntry(name, size, url);
