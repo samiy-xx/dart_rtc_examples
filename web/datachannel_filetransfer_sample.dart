@@ -116,7 +116,7 @@ void main() {
           RequestFilePacket rfp = e.peerPacket as RequestFilePacket;
           new Logger().Debug("Remote requested file ${rfp.fileName}");
           fm.readFile(rfp.fileName).then((ArrayBuffer buffer) {
-            qClient.sendArrayBuffer(otherId, buffer).then((bool b) {
+            qClient.sendArrayBuffer(otherId, buffer).then((int b) {
               new Logger().Debug("FILE SENT");
             });
           });

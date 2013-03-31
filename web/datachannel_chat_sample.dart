@@ -2,10 +2,10 @@ import "dart:html";
 import "dart:async";
 import '../lib/demo_client.dart';
 
-import 'package:dart_rtc_common/rtc_common.dart';
-import 'package:dart_rtc_client/rtc_client.dart';
-//import '../../dart_rtc_common/lib/rtc_common.dart';
-//import '../../dart_rtc_client/lib/rtc_client.dart';
+//import 'package:dart_rtc_common/rtc_common.dart';
+//import 'package:dart_rtc_client/rtc_client.dart';
+import '../../dart_rtc_common/lib/rtc_common.dart';
+import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
   int channelLimit = 10;
   Element c = query("#container");
@@ -42,7 +42,9 @@ void main() {
             if (qClient.peerManager.findWrapper(target) == null) {
               qClient.createPeerConnection(target);
             }
-            qClient.sendPeerUserMessage(target, remains.join(" "));
+            //qClient.sendPeerUserMessage(target, remains.join(" "));
+            String toSend = remains.join(" ");
+            qClient.sendArrayBuffer(target, BinaryData.bufferFromString(toSend));
           }
         } catch(e){}
       } else {
@@ -65,8 +67,8 @@ void main() {
       qClient.joinChannel("abc");
     }
   });
+  
   qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
-
     notifier.display("Signaling connected to server ${e.message}");
     chat_input.contentEditable = "true";
     chat_input.classes.remove("input_inactive");
@@ -74,8 +76,6 @@ void main() {
     var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Connected to server");
     chat_output.append(entry);
     chat_output.scrollTop = chat_output.scrollHeight;
-
-
   });
 
   qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
@@ -94,37 +94,52 @@ void main() {
     });
 
   });
-
+  qClient.onBinaryEvent.listen((RtcEvent e) {
+    if (e is BinaryBufferCompleteEvent) {
+      BinaryBufferCompleteEvent bbc = e;
+      var entry = createPrivateEntry(new DateTime.now().toString(), bbc.peer.id, BinaryData.stringFromBuffer(bbc.buffer));
+      chat_output.append(entry);
+      chat_output.scrollTop = chat_output.scrollHeight;
+      notifier.display("Private peer message from ${bbc.peer.id}");
+    }
+  });
+  
   qClient.onPacketEvent.listen((PacketEvent e) {
-
+    new Logger().Debug("PacketEvent ${e.type} ${e.packet}");
+    
     if (e.type == PacketType.CHANNELMESSAGE) {
       ChannelMessage cm = e.packet as ChannelMessage;
       var entry = createChatEntry(new DateTime.now().toString(), cm.id, cm.message);
       chat_output.append(entry);
       chat_output.scrollTop = chat_output.scrollHeight;
-    } else if (e.type == PacketType.CHANNEL) {
+    }
+    
+    else if (e.type == PacketType.CHANNEL) {
       ChannelPacket cp = e.packet as ChannelPacket;
       var entry = createChatEntry(new DateTime.now().toString(), "CHANNEL", "Welcome to channel ${cp.channelId}. Channel has ${cp.users} users and has a limit of ${cp.limit} concurrent users");
       chat_output.append(entry);
-    } else if (e.type == PacketType.USERMESSAGE) {
+    }
+    
+    else if (e.type == PacketType.USERMESSAGE) {
       UserMessage um = e.packet as UserMessage;
       var entry = createPrivateEntry(new DateTime.now().toString(), um.id, um.message);
       chat_output.append(entry);
       chat_output.scrollTop = chat_output.scrollHeight;
       notifier.display("Private peer message from ${um.id}");
-    } else if (e.type == PacketType.ID) {
-
+    }
+    
+    else if (e.type.type == PacketType.ID.type) {
       IdPacket id = e.packet as IdPacket;
       DivElement u = createUserEntry(id.id);
       chat_users.append(u);
-
       u.onDoubleClick.listen((MouseEvent e) {
         if (chat_input.text == "") {
           chat_input.text = "/msg ${u.id}";
         }
       });
-    } else if (e.type == PacketType.JOIN) {
-
+    }
+    
+    else if (e.type == PacketType.JOIN) {
       JoinPacket join = e.packet as JoinPacket;
       DivElement u = createUserEntry(join.id);
       chat_users.append(u);
@@ -135,13 +150,16 @@ void main() {
           chat_input.text = "/msg ${u.id}";
         }
       });
-    } else if (e.type == PacketType.BYE) {
+    }
+    
+    else if (e.type == PacketType.BYE) {
       ByePacket bye = e.packet as ByePacket;
       removeUserEntry(chat_users, bye.id);
       var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "${bye.id} leaves the channel");
       chat_output.append(entry);
     }
   });
+  
   qClient.initialize();
 }
 
