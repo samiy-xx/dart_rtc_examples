@@ -9,8 +9,13 @@ void main() {
   int channelLimit = 5;
   Element c = query("#container");
   Notifier notifier = new Notifier();
-  AudioElement localAudio = query("#local_audio");
-  AudioElement remoteAudio = query("#remote_audio");
+  //AudioElement localAudio = query("#local_audio");
+  //AudioElement remoteAudio = query("#remote_audio");
+  WebMediaManager mm = new WebMediaManager();
+  mm.setMainContainer("#main");
+  mm.setChildContainer("#aux");
+  AudioContainer ac = mm.addAudioContainer("main_user", "main");
+  
   ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(true)
   .setRequireVideo(false)
@@ -37,17 +42,21 @@ void main() {
 
   client.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
     if (e.isLocal) {
-      localAudio.src = Url.createObjectUrl(e.stream);
-      localAudio.play();
+      //localAudio.src = Url.createObjectUrl(e.stream);
+      //localAudio.play();
+       mm.setLocalStream(e.stream);
     } else {
-      remoteAudio.src = Url.createObjectUrl(e.stream);
-      remoteAudio.play();
+      mm.addAudioStream(e.stream, e.peerWrapper.id);
+      //remoteAudio.src = Url.createObjectUrl(e.stream);
+      //remoteAudio.play();
+      
     }
   });
 
   client.onRemoteMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
     notifier.display("Remote stream removed");
-    remoteAudio.pause();
+    //remoteAudio.pause();
+    mm.removeRemoteStream(e.peerWrapper.id);
   });
 
   client.onSignalingCloseEvent.listen((SignalingCloseEvent e) {

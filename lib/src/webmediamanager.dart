@@ -68,7 +68,15 @@ class WebMediaManager extends MediaManager {
     }
     vc.setStream(ms);
   }
-
+  void addAudioStream(MediaStream ms, String id, [bool main]) {
+    MediaContainer vc;
+    if (?main) {
+      vc = addAudioContainer(id, "main");
+    } else {
+      vc = addAudioContainer(id);
+    }
+    vc.setStream(ms);
+  }
   void setLocalStream(MediaStream ms) {
     _localStream = ms;
   }
@@ -100,6 +108,35 @@ class WebMediaManager extends MediaManager {
    */
   MediaContainer addVideoContainer(String id, [String target]) {
     MediaContainer vc = createVideoContainer(id);
+    MediaContainer main = getMainMediaContainer();
+
+    DivElement host;
+
+    if (main == null) {
+      log.Debug("main is null, setting it to be the host");
+      host = _mainHost;
+    } else {
+      log.Debug("host was not null, host id not child");
+      host = _childHost;
+      if (?target)
+        host = _mainHost.id == target ? _mainHost : _childHost;
+      if (host == _mainHost) {
+        log.Debug("host is now main");
+        moveMediaContainer(main, _childHost);
+      }
+    }
+
+    _containers.add(vc);
+    inject(host, vc, true);
+
+    return vc;
+  }
+
+  /**
+   * Adds a videocontainer to the dom tree
+   */
+  MediaContainer addAudioContainer(String id, [String target]) {
+    MediaContainer vc = createAudioContainer(id);
     MediaContainer main = getMainMediaContainer();
 
     DivElement host;

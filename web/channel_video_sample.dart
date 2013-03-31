@@ -14,10 +14,10 @@ void main() {
   int channelLimit = 5;
   Element c = query("#container");
   Notifier notifier = new Notifier();
-  WebVideoManager vm = new WebVideoManager();
+  WebMediaManager vm = new WebMediaManager();
   vm.setMainContainer("#main");
   vm.setChildContainer("#aux");
-  WebVideoContainer vc = vm.addVideoContainer("main_user", "main");
+  VideoContainer vc = vm.addVideoContainer("main_user", "main");
 
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   //.setChannel("abc")
