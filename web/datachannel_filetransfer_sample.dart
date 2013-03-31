@@ -186,8 +186,6 @@ class EntryManager {
     _buttonCopyFromRemote = query("#copy_from_remote");
     _progressTotal = query("#progress_amount");
     _progressElement = query("#progress_bar");
-    _abortAll = query("#abort_all");
-
     _setListeners();
   }
 
@@ -239,10 +237,6 @@ class EntryManager {
           _entryRequestCallback(j.text);
         }
       });
-    });
-
-    _abortAll.onClick.listen((Event e) {
-
     });
   }
 

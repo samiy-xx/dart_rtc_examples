@@ -8,11 +8,12 @@ import 'package:dart_rtc_common/rtc_common.dart';
 import 'package:dart_rtc_client/rtc_client.dart';
 
 part "src/videomanager.dart";
-part "src/videocontainer.dart";
+part "src/mediacontainer.dart";
+part "src/audiocontainer.dart";
 part "src/websignalhandler.dart";
 part "src/datasignalhandler.dart";
-part "src/webvideocontainer.dart";
-part "src/webvideomanager.dart";
+part "src/videocontainer.dart";
+part "src/webmediamanager.dart";
 part "src/notifier.dart";
 part "src/weblogger.dart";
 part "src/filemanager.dart";
