@@ -2,10 +2,10 @@ import "dart:html";
 import "dart:async";
 import '../lib/demo_client.dart';
 
-//import 'package:dart_rtc_common/rtc_common.dart';
-//import 'package:dart_rtc_client/rtc_client.dart';
-import '../../dart_rtc_common/lib/rtc_common.dart';
-import '../../dart_rtc_client/lib/rtc_client.dart';
+import 'package:dart_rtc_common/rtc_common.dart';
+import 'package:dart_rtc_client/rtc_client.dart';
+//import '../../dart_rtc_common/lib/rtc_common.dart';
+//import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
   int channelLimit = 10;
   Element c = query("#container");
@@ -13,7 +13,6 @@ void main() {
   DivElement chat_output = query("#chat_output");
   DivElement chat_input = query("#chat_input");
   DivElement chat_users = query("#chat_users");
-
   final int KEY_ENTER = 13;
 
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
@@ -32,7 +31,7 @@ void main() {
       if (chat_input.text.startsWith("/")) {
         List<String> l = chat_input.text.split(" ");
         String target = l[1];
-        List<String> remains = l.sublist(2, l.length - 2);
+        List<String> remains = l.sublist(2);
         try {
           // Copypaste the name of the target seems to cause interesting effects
           // try catch to quick fix =)

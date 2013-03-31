@@ -22,7 +22,7 @@ void main() {
   FileManager fm = new FileManager();
   Element kbs = query("#kbs");
   DateTime _start;
-  
+
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
@@ -76,8 +76,8 @@ void main() {
     if (e is BinaryChunkEvent) {
       if (_start == null)
         _start = new DateTime.now();
-      
-      
+
+
       BinaryChunkEvent bce = e;
       receivedTotal += bce.bytes;
       int elapsed = new DateTime.now().millisecondsSinceEpoch - _start.millisecondsSinceEpoch;
@@ -91,7 +91,7 @@ void main() {
       em.setProgressCompletion(receivedTotal, bce.bytesTotal);
       em.setProgressMax(bce.totalSequences);
       em.setProgressValue(bce.sequence);
-      
+
     }
 
     else if (e is BinarySendCompleteEvent) {
@@ -116,7 +116,7 @@ void main() {
           RequestFilePacket rfp = e.peerPacket as RequestFilePacket;
           new Logger().Debug("Remote requested file ${rfp.fileName}");
           fm.readFile(rfp.fileName).then((ArrayBuffer buffer) {
-            qClient.sendArrayBuffer(otherId, buffer).then((int b) {
+            qClient.sendFile(otherId, buffer).then((int b) {
               new Logger().Debug("FILE SENT");
             });
           });
