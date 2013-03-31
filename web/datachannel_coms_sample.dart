@@ -6,11 +6,12 @@ import '../../dart_rtc_client/lib/rtc_client.dart';
 import '../../dart_rtc_common/lib/rtc_common.dart';
 
 void main() {
+  var key = query("#key").text;
   String otherId;
   String unreliableString = "This string is sent with fire and forget attitude";
   String reliableString = "This string is sent and expects a future to return bool";
   Timer t;
-  
+
   ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
@@ -23,7 +24,7 @@ void main() {
     }
 
     if (e.state == InitializationState.REMOTE_READY) {
-      client.joinChannel("abc");
+      client.joinChannel(key);
     }
   });
 
@@ -55,7 +56,7 @@ void main() {
       }
     }
   });
-  
+
   client.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
     new Logger().Debug("Peer state changed to ${e.state}");
     if (e.state == PEER_STABLE) {
@@ -63,7 +64,7 @@ void main() {
       otherId = e.peerwrapper.id;
     }
   });
-  
+
   client.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryChunkEvent) {
       BinaryChunkEvent bce = e;

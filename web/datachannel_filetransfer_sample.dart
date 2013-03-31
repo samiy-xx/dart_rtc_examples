@@ -14,6 +14,7 @@ typedef void onEntry(String name, int size);
 typedef void entryRequest(String name);
 
 void main() {
+  var key = query("#key").text;
   int channelLimit = 2;
   int receivedTotal = 0;
   String otherId;
@@ -35,7 +36,7 @@ void main() {
     }
 
     if (e.state == InitializationState.REMOTE_READY) {
-      qClient.joinChannel("abc");
+      qClient.joinChannel(key);
     }
   });
 

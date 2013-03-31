@@ -10,6 +10,7 @@ import '../lib/demo_client.dart';
 import '../../dart_rtc_client/lib/rtc_client.dart';
 
 void main() {
+  var key = query("#key").text;
   int channelLimit = 5;
   Element c = query("#container");
   Notifier notifier = new Notifier();
@@ -34,8 +35,8 @@ void main() {
     }
 
     if (e.state == InitializationState.REMOTE_READY) {
-      notifier.display("Joining channel abc");
-      qClient.joinChannel("abc");
+      notifier.display("Joining channel $key");
+      qClient.joinChannel(key);
     }
   });
 

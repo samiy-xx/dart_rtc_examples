@@ -7,6 +7,7 @@ import 'package:dart_rtc_client/rtc_client.dart';
 //import '../../dart_rtc_common/lib/rtc_common.dart';
 //import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
+  var key = query("#key").text;
   int channelLimit = 10;
   Element c = query("#container");
   Notifier notifier = new Notifier();
@@ -63,7 +64,7 @@ void main() {
       }
     }
     if (e.state == InitializationState.REMOTE_READY) {
-      qClient.joinChannel("abc");
+      qClient.joinChannel(key);
     }
   });
 

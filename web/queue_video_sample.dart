@@ -11,6 +11,7 @@ import 'package:dart_rtc_client/rtc_client.dart';
  */
 
 void main() {
+  var key = query("#key").text;
   VideoElement localVideo = query("#local_video");
   VideoElement remoteVideo = query("#remote_video");
 
@@ -19,7 +20,7 @@ void main() {
   QueueMonitor monitor = new QueueMonitor(query("#queue"));
 
   QueueClient qClient = new QueueClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
-  .setChannel("abc")
+  .setChannel(key)
   .setRequireAudio(true)
   .setRequireVideo(true)
   .setRequireDataChannel(false);
