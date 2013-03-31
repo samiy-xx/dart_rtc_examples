@@ -67,7 +67,7 @@ void main() {
       qClient.joinChannel("abc");
     }
   });
-  
+
   qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
     notifier.display("Signaling connected to server ${e.message}");
     chat_input.contentEditable = "true";
@@ -103,32 +103,32 @@ void main() {
       notifier.display("Private peer message from ${bbc.peer.id}");
     }
   });
-  
+
   qClient.onPacketEvent.listen((PacketEvent e) {
-    new Logger().Debug("PacketEvent ${e.type} ${e.packet}");
-    
-    if (e.type == PacketType.CHANNELMESSAGE) {
+    new Logger().Debug("PacketEvent ${e.type} ${e.packet} ");
+
+    if (e.type == PACKET_TYPE_CHANNELMESSAGE) {
       ChannelMessage cm = e.packet as ChannelMessage;
       var entry = createChatEntry(new DateTime.now().toString(), cm.id, cm.message);
       chat_output.append(entry);
       chat_output.scrollTop = chat_output.scrollHeight;
     }
-    
-    else if (e.type == PacketType.CHANNEL) {
+
+    else if (e.type == PACKET_TYPE_CHANNEL) {
       ChannelPacket cp = e.packet as ChannelPacket;
       var entry = createChatEntry(new DateTime.now().toString(), "CHANNEL", "Welcome to channel ${cp.channelId}. Channel has ${cp.users} users and has a limit of ${cp.limit} concurrent users");
       chat_output.append(entry);
     }
-    
-    else if (e.type == PacketType.USERMESSAGE) {
+
+    else if (e.type == PACKET_TYPE_USERMESSAGE) {
       UserMessage um = e.packet as UserMessage;
       var entry = createPrivateEntry(new DateTime.now().toString(), um.id, um.message);
       chat_output.append(entry);
       chat_output.scrollTop = chat_output.scrollHeight;
       notifier.display("Private peer message from ${um.id}");
     }
-    
-    else if (e.type.type == PacketType.ID.type) {
+
+    else if (e.type == PACKET_TYPE_ID) {
       IdPacket id = e.packet as IdPacket;
       DivElement u = createUserEntry(id.id);
       chat_users.append(u);
@@ -138,8 +138,8 @@ void main() {
         }
       });
     }
-    
-    else if (e.type == PacketType.JOIN) {
+
+    else if (e.type == PACKET_TYPE_JOIN) {
       JoinPacket join = e.packet as JoinPacket;
       DivElement u = createUserEntry(join.id);
       chat_users.append(u);
@@ -151,15 +151,15 @@ void main() {
         }
       });
     }
-    
-    else if (e.type == PacketType.BYE) {
+
+    else if (e.type == PACKET_TYPE_BYE) {
       ByePacket bye = e.packet as ByePacket;
       removeUserEntry(chat_users, bye.id);
       var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "${bye.id} leaves the channel");
       chat_output.append(entry);
     }
   });
-  
+
   qClient.initialize();
 }
 

@@ -84,7 +84,7 @@ void main() {
   });
 
   qClient.onPacketEvent.listen((PacketEvent e) {
-    if (e.type == PacketType.CHANNEL) {
+    if (e.type == PACKET_TYPE_CHANNEL) {
       ChannelPacket p = e.packet as ChannelPacket;
 
       if (p.owner) {
