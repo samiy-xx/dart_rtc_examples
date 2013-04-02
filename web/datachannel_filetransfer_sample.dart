@@ -23,7 +23,9 @@ void main() {
   FileManager fm = new FileManager();
   Element kbs = query("#kbs");
   DateTime _start;
-
+  List<String> requestedFiles = new List<String>();
+  bool isTransfering = false;
+  
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
@@ -98,11 +100,27 @@ void main() {
     else if (e is BinarySendCompleteEvent) {
       BinarySendCompleteEvent bsce = e;
     }
-
+    
+    else if (e is BinaryFileCompleteEvent) {
+      print("BINARYFILECOMPLETE");
+      BinaryFileCompleteEvent bfce = e;
+      
+      fm.saveBlob(bfce.blob, currentRequestedFile).then((bool saved) {
+        currentRequestedFile = null;
+        receivedTotal = 0;
+        
+        if (requestedFiles.length > 0) {
+          String current = requestedFiles.removeAt(0);
+          currentRequestedFile = current;
+          qClient.sendPeerPacket(otherId, new RequestFilePacket(current));
+        } else {
+          em.enableControls();
+        }
+      });
+    }
+    
     else if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
-      fm.writeBuffer(bbc.buffer, currentRequestedFile);
-      currentRequestedFile = null;
       receivedTotal = 0;
     }
 
@@ -117,7 +135,9 @@ void main() {
           RequestFilePacket rfp = e.peerPacket as RequestFilePacket;
           new Logger().Debug("Remote requested file ${rfp.fileName}");
           fm.readFile(rfp.fileName).then((ArrayBuffer buffer) {
+            em.disableControls();
             qClient.sendFile(otherId, buffer).then((int b) {
+              em.enableControls();
               new Logger().Debug("FILE SENT");
             });
           });
@@ -138,8 +158,16 @@ void main() {
   };
 
   em.onEntryRequest = (String name) {
-    currentRequestedFile = name;
-    qClient.sendPeerPacket(otherId, new RequestFilePacket(name));
+    if (!requestedFiles.contains(name))
+      requestedFiles.add(name);
+    
+    if (!isTransfering) {
+      em.disableControls();
+      String current = requestedFiles.removeAt(0);
+      currentRequestedFile = current;
+      qClient.sendPeerPacket(otherId, new RequestFilePacket(current));
+      isTransfering = true;
+    }
   };
 
   qClient.initialize();
@@ -154,6 +182,9 @@ class EntryManager {
   Element _buttonCopyFromRemote;
   Element _abortAll;
   Element _progressTotal;
+  StreamSubscription _buttonAddFilesSub;
+  StreamSubscription _buttonRemoveFilesSub;
+  StreamSubscription _buttonCopyFilesSub;
   ProgressElement _progressElement;
   CheckboxInputElement _allLocal;
   CheckboxInputElement _allRemote;
@@ -187,8 +218,40 @@ class EntryManager {
     _progressTotal = query("#progress_amount");
     _progressElement = query("#progress_bar");
     _setListeners();
+    enableControls();
   }
-
+  
+  void disableControls() {
+    _buttonAddFilesSub.pause();
+    _buttonRemoveFilesSub.pause();
+    _buttonCopyFilesSub.pause();
+    
+    _buttonAddFiles.classes.add("disabled_button");
+    _buttonAddFiles.classes.remove("enabled_button");
+    
+    _buttonRemoveFiles.classes.add("disabled_button");
+    _buttonRemoveFiles.classes.remove("enabled_button");
+    
+    _buttonCopyFromRemote.classes.add("disabled_button");
+    _buttonCopyFromRemote.classes.remove("enabled_button");
+  }
+  
+  void enableControls() {
+    try {
+      _buttonAddFilesSub.resume();
+      _buttonRemoveFilesSub.resume();
+      _buttonCopyFilesSub.resume();
+    } catch(e) {}
+    _buttonAddFiles.classes.add("enabled_button");
+    _buttonAddFiles.classes.remove("disabled_button");
+    
+    _buttonRemoveFiles.classes.add("enabled_button");
+    _buttonRemoveFiles.classes.remove("disabled_button");
+    
+    _buttonCopyFromRemote.classes.add("enabled_button");
+    _buttonCopyFromRemote.classes.remove("disabled_button");
+  }
+  
   void _setListeners() {
     _allLocal.onChange.listen((Event e) {
       List<Element> checkboxes = queryAll("#left .file_select");
@@ -205,7 +268,7 @@ class EntryManager {
       });
     });
 
-    _buttonAddFiles.onClick.listen((Event e) {
+    _buttonAddFilesSub = _buttonAddFiles.onClick.listen((Event e) {
       _upload.click();
     });
 
@@ -218,7 +281,7 @@ class EntryManager {
       }
     });
 
-    _buttonRemoveFiles.onClick.listen((Event e) {
+    _buttonRemoveFilesSub = _buttonRemoveFiles.onClick.listen((Event e) {
       queryAll("#left .file_row").forEach((Element e) {
         CheckboxInputElement i = e.query(".file_select");
         if (i.checked) {
@@ -228,7 +291,7 @@ class EntryManager {
       });
     });
 
-    _buttonCopyFromRemote.onClick.listen((Event e) {
+    _buttonCopyFilesSub = _buttonCopyFromRemote.onClick.listen((Event e) {
       queryAll("#right .file_row").forEach((Element e) {
         CheckboxInputElement i = e.query(".file_select");
         if (i.checked) {
@@ -414,7 +477,8 @@ class FileManager {
     saveBlob(b, name);
   }
 
-  void saveBlob(Blob b, String name) {
+  Future<bool> saveBlob(Blob b, String name) {
+    Completer completer = new Completer();
     _dir.createFile(name)
     .then((FileEntry fe) {
       fe.createWriter().then((FileWriter fw) {
@@ -423,6 +487,7 @@ class FileManager {
         if (_fileAddedStreamController.hasSubscribers)
           _fileAddedStreamController.add(new TmpFile(b.size, name));
         print("Blob saved to disk");
+        completer.complete(true);
         update();
       });
     })
@@ -430,7 +495,7 @@ class FileManager {
       new Logger().Error("Error creating file");
       onError(e.error);
     });
-
+    return completer.future;
   }
 
   void saveFile(File f) {

@@ -42,21 +42,15 @@ void main() {
 
   client.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
     if (e.isLocal) {
-      //localAudio.src = Url.createObjectUrl(e.stream);
-      //localAudio.play();
        mm.setLocalStream(e.stream);
     } else {
       mm.addAudioStream(e.stream, e.peerWrapper.id);
-      //remoteAudio.src = Url.createObjectUrl(e.stream);
-      //remoteAudio.play();
-      
     }
   });
 
   client.onRemoteMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
     notifier.display("Remote stream removed");
-    //remoteAudio.pause();
-    mm.removeRemoteStream(e.peerWrapper.id);
+    mm.removeRemoteStream(e.pw.id);
   });
 
   client.onSignalingCloseEvent.listen((SignalingCloseEvent e) {

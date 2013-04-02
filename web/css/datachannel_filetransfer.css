@@ -126,13 +126,22 @@ h1, p {
  width: 100px;
 }
 
+.enabled_button {
+  background: #fff;
+}
+
+.disabled_button {
+  background: #ccc;  
+}
+
 .button {
   display: inline-block;
   padding: 10px;
-  background: #fff;
+  
   border: 1px solid #000;
   cursor: pointer;
 }
+
 .button:hover {
   background: #ccc; 
 }
