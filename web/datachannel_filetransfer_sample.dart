@@ -25,7 +25,7 @@ void main() {
   DateTime _start;
   List<String> requestedFiles = new List<String>();
   bool isTransfering = false;
-  
+
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
@@ -100,25 +100,27 @@ void main() {
     else if (e is BinarySendCompleteEvent) {
       BinarySendCompleteEvent bsce = e;
     }
-    
+
     else if (e is BinaryFileCompleteEvent) {
       print("BINARYFILECOMPLETE");
       BinaryFileCompleteEvent bfce = e;
-      
+
       fm.saveBlob(bfce.blob, currentRequestedFile).then((bool saved) {
         currentRequestedFile = null;
         receivedTotal = 0;
-        
+
         if (requestedFiles.length > 0) {
           String current = requestedFiles.removeAt(0);
           currentRequestedFile = current;
           qClient.sendPeerPacket(otherId, new RequestFilePacket(current));
+          isTransfering = true;
         } else {
           em.enableControls();
+          isTransfering = false;
         }
       });
     }
-    
+
     else if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
       receivedTotal = 0;
@@ -160,7 +162,7 @@ void main() {
   em.onEntryRequest = (String name) {
     if (!requestedFiles.contains(name))
       requestedFiles.add(name);
-    
+
     if (!isTransfering) {
       em.disableControls();
       String current = requestedFiles.removeAt(0);
@@ -220,22 +222,22 @@ class EntryManager {
     _setListeners();
     enableControls();
   }
-  
+
   void disableControls() {
     _buttonAddFilesSub.pause();
     _buttonRemoveFilesSub.pause();
     _buttonCopyFilesSub.pause();
-    
+
     _buttonAddFiles.classes.add("disabled_button");
     _buttonAddFiles.classes.remove("enabled_button");
-    
+
     _buttonRemoveFiles.classes.add("disabled_button");
     _buttonRemoveFiles.classes.remove("enabled_button");
-    
+
     _buttonCopyFromRemote.classes.add("disabled_button");
     _buttonCopyFromRemote.classes.remove("enabled_button");
   }
-  
+
   void enableControls() {
     try {
       _buttonAddFilesSub.resume();
@@ -244,14 +246,14 @@ class EntryManager {
     } catch(e) {}
     _buttonAddFiles.classes.add("enabled_button");
     _buttonAddFiles.classes.remove("disabled_button");
-    
+
     _buttonRemoveFiles.classes.add("enabled_button");
     _buttonRemoveFiles.classes.remove("disabled_button");
-    
+
     _buttonCopyFromRemote.classes.add("enabled_button");
     _buttonCopyFromRemote.classes.remove("disabled_button");
   }
-  
+
   void _setListeners() {
     _allLocal.onChange.listen((Event e) {
       List<Element> checkboxes = queryAll("#left .file_select");
@@ -275,9 +277,7 @@ class EntryManager {
     _upload.onChange.listen((Event e) {
       for (int i = 0; i < _upload.files.length; i++) {
         File file = _upload.files[i];
-
         new FileManager().saveFile(file);
-        //qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(file.name, file.size));
       }
     });
 
@@ -319,8 +319,11 @@ class EntryManager {
   void setStartTime(DateTime start) {
     _start = start;
   }
+
   void appendToLocalFiles(String name, int size, String url) {
-    print("Append to local files");
+    if (haveThisLocalEntry(name))
+      return;
+
     DivElement div = createEntry(name, size, url);
     _localFiles.append(div);
   }
@@ -344,6 +347,10 @@ class EntryManager {
     _remoteFiles.queryAll(".file_row").forEach((Element e) {
       e.remove();
     });
+  }
+
+  bool haveThisLocalEntry(String name) {
+    return queryAll("#left .col_name").any((Element e) => e.text == name);
   }
 
   bool haveThisEntry(String name) {
@@ -463,8 +470,6 @@ class FileManager {
   }
 
   void removeFile(String fileName) {
-    //_dir.getFile(fileName, options : {'create': false}).then((FileEntry e) {
-
     _dir.getFile(fileName).then((FileEntry fe) {
       fe.remove().then((f) => update()).catchError((AsyncError e) => onError(e.error));
     })
@@ -483,7 +488,7 @@ class FileManager {
     .then((FileEntry fe) {
       fe.createWriter().then((FileWriter fw) {
         fw.write(b);
-        //_entryCallback(name, b.size);
+
         if (_fileAddedStreamController.hasSubscribers)
           _fileAddedStreamController.add(new TmpFile(b.size, name));
         print("Blob saved to disk");
@@ -503,7 +508,6 @@ class FileManager {
     .then((FileEntry fe) {
       fe.createWriter().then((FileWriter fw) {
         fw.write(f);
-        //_entryCallback(f.name, f.size);
         if (_fileAddedStreamController.hasSubscribers) {
           print ("notify listeners");
           _fileAddedStreamController.add(new TmpFile(f.size, f.name));
@@ -521,7 +525,7 @@ class FileManager {
 
   Future<ArrayBuffer> readFile(String name) {
     Completer completer = new Completer();
-    //_dir.getFile(name, options: {})
+
     _dir.getFile(name)
     .then((FileEntry fe) {
       fe.file().then((File f) {
@@ -535,40 +539,23 @@ class FileManager {
         reader.readAsArrayBuffer(f);
       });
     });
-    /*_dir.getFile(name, options: {}, successCallback : (FileEntry fe) {
-      fe.file((File f) {
-        FileReader reader = new FileReader();
-        reader.onLoadEnd.listen((ProgressEvent e) {
-          completer.complete(reader.result);
-        });
-        reader.readAsArrayBuffer(f);
-      }, onError);
-    } , errorCallback: onError);*/
 
     return completer.future;
   }
 
   void update() {
-    _em.clearLocalFiles();
     DirectoryReader dirReader = _dir.createReader();
     dirReader.readEntries().then((List<Entry> entries) {
+      _em.clearLocalFiles();
+      print(entries.length);
       for (int i = 0; i < entries.length; i++) {
+
         Entry e = entries[i];
         e.getMetadata().then((Metadata m) {
           _em.appendToLocalFiles(e.name, m.size, e.toUrl());
         });
       }
     });
-    /*dirReader.readEntries((List<Entry> entries) {
-      for (int i = 0; i < entries.length; i++) {
-        Entry e = entries[i];
-        e.getMetadata((Metadata m) {
-          //_entryCallback(e.name, m.size);
-          _em.appendToLocalFiles(e.name, m.size, e.toUrl());
-        }, onError);
-
-      }
-    }, onError);*/
   }
 
   Future<List<Entry>> getEntries() {
@@ -577,9 +564,6 @@ class FileManager {
     dirReader.readEntries().then((List<Entry> entries) {
       completer.complete(entries);
     });
-    /*dirReader.readEntries((List<Entry> entries) {
-      completer.complete(entries);
-    }, onError);*/
     return completer.future;
   }
 
