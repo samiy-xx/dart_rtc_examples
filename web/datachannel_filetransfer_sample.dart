@@ -1,7 +1,7 @@
 import "dart:html";
 import "dart:async";
 import "dart:crypto";
-
+import 'dart:json' as json;
 import '../lib/demo_client.dart';
 
 //import 'package:dart_rtc_common/rtc_common.dart';
@@ -60,7 +60,10 @@ void main() {
       fm.getEntries().then((List<Entry> entries) {
         for (Entry entry in entries) {
           entry.getMetadata().then((Metadata m) {
-            qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(entry.name, m.size));
+            //qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(entry.name, m.size));
+            qClient.sendArrayBufferReliable(otherId, new DirectoryEntryPacket(entry.name, m.size).toBuffer()).then((int i) {
+              print("Sent directory entry");
+            });
           });
         }
       });
@@ -112,7 +115,9 @@ void main() {
         if (requestedFiles.length > 0) {
           String current = requestedFiles.removeAt(0);
           currentRequestedFile = current;
-          qClient.sendPeerPacket(otherId, new RequestFilePacket(current));
+          qClient.sendArrayBufferReliable(otherId, new RequestFilePacket(current).toBuffer()).then((int i) {
+            print("Request file packet sent");
+          });
           isTransfering = true;
         } else {
           em.enableControls();
@@ -124,39 +129,44 @@ void main() {
     else if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
       receivedTotal = 0;
-    }
-
-    else if (e is BinaryPeerPacketEvent) {
-      BinaryPeerPacketEvent bppe = e;
-      switch (bppe.peerPacket.packetType) {
-        case PeerPacket.TYPE_DIRECTORY_ENTRY:
-          DirectoryEntryPacket dep = e.peerPacket as DirectoryEntryPacket;
-          em.appendToRemoteFiles(dep.fileName, dep.fileSize);
-          break;
-        case PeerPacket.TYPE_REQUEST_FILE:
-          RequestFilePacket rfp = e.peerPacket as RequestFilePacket;
-          new Logger().Debug("Remote requested file ${rfp.fileName}");
-          fm.readFile(rfp.fileName).then((ArrayBuffer buffer) {
-            em.disableControls();
-            qClient.sendFile(otherId, buffer).then((int b) {
-              em.enableControls();
-              new Logger().Debug("FILE SENT");
+      
+      Map m = json.parse(BinaryData.stringFromBuffer(e.buffer));
+      if (m.containsKey('packetType')) {
+        int packetType = m['packetType'];
+        PeerPacket p;
+        switch (packetType) {
+          case PeerPacket.TYPE_DIRECTORY_ENTRY:
+            p = DirectoryEntryPacket.fromMap(m);
+            em.appendToRemoteFiles(p.fileName, p.fileSize);
+            break;
+          case PeerPacket.TYPE_REQUEST_FILE:
+            p = RequestFilePacket.fromMap(m);
+            fm.readFile(p.fileName).then((ArrayBuffer buffer) {
+              em.disableControls();
+              qClient.sendFile(otherId, buffer).then((int b) {
+                em.enableControls();
+                new Logger().Debug("FILE SENT");
+              });
             });
-          });
-          break;
-        default:
-          break;
-      }
+            break;
+          default:
+            p = null;
+            break;
+        }
+    }
     }
   });
 
   fm.onFileAddedEvent.listen((TmpFile f) {
-    print("File packet send");
-    qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(f.name, f.size));
+    qClient.sendArrayBufferReliable(otherId, new DirectoryEntryPacket(f.name, f.size).toBuffer()).then((int i) {
+      print("Sent directory entry");
+    });
   });
 
   fm.entryCallback = (String name, int size) {
-    qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(name, size));
+    qClient.sendArrayBufferReliable(otherId, new DirectoryEntryPacket(name, size).toBuffer()).then((int i) {
+      print("Sent directory entry");
+    });
   };
 
   em.onEntryRequest = (String name) {
@@ -167,7 +177,9 @@ void main() {
       em.disableControls();
       String current = requestedFiles.removeAt(0);
       currentRequestedFile = current;
-      qClient.sendPeerPacket(otherId, new RequestFilePacket(current));
+      qClient.sendArrayBufferReliable(otherId, new RequestFilePacket(current).toBuffer()).then((int i) {
+        print("Request file packet sent");
+      });
       isTransfering = true;
     }
   };

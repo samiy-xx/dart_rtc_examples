@@ -3,7 +3,7 @@ library demo_client;
 import 'dart:html';
 import 'dart:math';
 import 'dart:async';
-
+import 'dart:json' as json;
 import 'package:dart_rtc_common/rtc_common.dart';
 import 'package:dart_rtc_client/rtc_client.dart';
 
@@ -20,3 +20,4 @@ part "src/filemanager.dart";
 part "src/dndmanager.dart";
 part "src/fileevent.dart";
 part "src/resizer.dart";
+part "src/peerpacket.dart";

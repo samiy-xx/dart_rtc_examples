@@ -2,10 +2,10 @@ import "dart:html";
 import "dart:async";
 import '../lib/demo_client.dart';
 
-//import 'package:dart_rtc_common/rtc_common.dart';
-//import 'package:dart_rtc_client/rtc_client.dart';
-import '../../dart_rtc_common/lib/rtc_common.dart';
-import '../../dart_rtc_client/lib/rtc_client.dart';
+import 'package:dart_rtc_common/rtc_common.dart';
+import 'package:dart_rtc_client/rtc_client.dart';
+//import '../../dart_rtc_common/lib/rtc_common.dart';
+//import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
   var key = query("#key").text;
   int channelLimit = 10;
@@ -44,7 +44,7 @@ void main() {
             }
             //qClient.sendPeerUserMessage(target, remains.join(" "));
             String toSend = remains.join(" ");
-            qClient.sendArrayBuffer(target, BinaryData.bufferFromString(toSend));
+            qClient.sendArrayBufferReliable(target, BinaryData.bufferFromString(toSend));
           }
         } catch(e){}
       } else {
