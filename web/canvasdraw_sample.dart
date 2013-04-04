@@ -90,6 +90,7 @@ class CanvasDraw {
     _element.onMouseDown.listen(_onMouseDown);
     _element.onMouseMove.listen(_onMouseMove);
     _element.onMouseUp.listen(_onMouseUp);
+    _element.onTouchStart(_onTouchStart);
   }
 
   void addPeer(DataPeerWrapper wrapper) {
@@ -117,6 +118,10 @@ class CanvasDraw {
 
     _ctx.lineTo(p.x, p.y);
     _ctx.stroke();
+  }
+
+  void _onTouchStart(TouchEvent e) {
+
   }
 
   void _onMouseDown(MouseEvent e) {
