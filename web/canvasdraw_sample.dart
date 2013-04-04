@@ -104,7 +104,7 @@ class CanvasDraw {
 
   void removePeer(String id) {
     window.setImmediate(() {
-      if (!_peerIds.containsKey(id))
+      if (_peerIds.containsKey(id))
         _peerIds.remove(id);
     });
   }
