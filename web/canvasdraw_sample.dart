@@ -77,7 +77,8 @@ class CanvasDraw {
   const int _updateInterval = 30;
   int _lastSent;
   bool _isMouseDown = false;
-
+  Point _previous;
+  
   CanvasDraw(CanvasElement c, ChannelClient client) {
     _element = c;
     _element.width = 770;
@@ -143,6 +144,9 @@ class CanvasDraw {
     int y = e.targetTouches[0].page.y;
     _ctx.beginPath();
     _ctx.moveTo(x, y);
+    _ctx.lineTo(x, y);
+    _ctx.stroke();
+    _previous = new Point(x, y);
     _signalMouseDown(x, y);
   }
 
@@ -151,6 +155,9 @@ class CanvasDraw {
 
     _ctx.beginPath();
     _ctx.moveTo(e.offset.x, e.offset.y);
+    _ctx.lineTo(e.offset.x, e.offset.y);
+    _ctx.stroke();
+    _previous = new Point(e.offset.x, e.offset.y);
 
     _signalMouseDown(e.offset.x, e.offset.y);
   }
@@ -160,10 +167,6 @@ class CanvasDraw {
     _peerIds.forEach((String id, Point p) {
       _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
     });
-    //for (int i = 0; i < _peerIds.length; i++) {
-    //  String id = _peerIds[i];
-    //  _client.sendArrayBufferUnReliable(pw.id, _toSend.toBuffer());
-    //}
   }
   
   void _onTouchEnd(TouchEvent e) {
@@ -172,16 +175,22 @@ class CanvasDraw {
     _isMouseDown = false;
     int x = e.targetTouches[0].page.x;
     int y = e.targetTouches[0].page.y;
+    _ctx.beginPath();
+    _ctx.moveTo(x, y);
     _ctx.lineTo(x, y);
     _ctx.stroke();
+    _previous = new Point(x, y);
     _signalMouseUp(x, y);
   }
   
   void _onMouseUp(MouseEvent e) {
     _isMouseDown = false;
 
+    _ctx.beginPath();
+    _ctx.moveTo(e.offset.x, e.offset.y);
     _ctx.lineTo(e.offset.x, e.offset.y);
     _ctx.stroke();
+    _previous = new Point(e.offset.x, e.offset.y);
 
     _signalMouseUp(e.offset.x, e.offset.y);
   }
@@ -191,10 +200,6 @@ class CanvasDraw {
     _peerIds.forEach((String id, Point p) {
       _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
     });
-    //for (int i = 0; i < _peerIds.length; i++) {
-    //  PeerWrapper pw = _peerIds[i];
-    //  _client.sendArrayBufferUnReliable(pw.id, _toSend.toBuffer());
-    //}  
   }
   
   void _onTouchMove(TouchEvent e) {
@@ -203,8 +208,12 @@ class CanvasDraw {
     
     int x = e.targetTouches[0].page.x;
     int y = e.targetTouches[0].page.y;
+    
+    _ctx.beginPath();
+    _ctx.moveTo(_previous.x, _previous.y);
     _ctx.lineTo(x, y);
-    _ctx.stroke(); 
+    _ctx.stroke();
+    _previous = new Point(x, y);
     
     int now = new DateTime.now().millisecondsSinceEpoch;
     if (now > _lastSent + _updateInterval) {
@@ -217,8 +226,11 @@ class CanvasDraw {
     if (!_isMouseDown)
       return;
 
+    _ctx.beginPath();
+    _ctx.moveTo(_previous.x, _previous.y);
     _ctx.lineTo(e.offset.x, e.offset.y);
     _ctx.stroke();
+    _previous = new Point(e.offset.x, e.offset.y);
 
     int now = new DateTime.now().millisecondsSinceEpoch;
     if (now > _lastSent + _updateInterval) {
