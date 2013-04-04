@@ -93,6 +93,8 @@ class CanvasDraw {
     _element.onMouseMove.listen(_onMouseMove);
     _element.onMouseUp.listen(_onMouseUp);
     _element.onTouchStart.listen(_onTouchStart);
+    _element.onTouchEnd.listen(_onTouchEnd);
+    _element.onTouchMove.listen(_onTouchMove);
   }
 
   void addPeer(String id) {
