@@ -111,9 +111,10 @@ void main() {
       fm.saveBlob(bfce.blob, currentRequestedFile).then((bool saved) {
         currentRequestedFile = null;
         receivedTotal = 0;
-
+        requestedFiles.removeAt(0);
         if (requestedFiles.length > 0) {
-          String current = requestedFiles.removeAt(0);
+          //String current = requestedFiles.removeAt(0);
+          String current = requestedFiles[0];
           currentRequestedFile = current;
           qClient.sendArrayBufferReliable(otherId, new RequestFilePacket(current).toBuffer()).then((int i) {
             print("Request file packet sent");
@@ -175,7 +176,8 @@ void main() {
 
     if (!isTransfering) {
       em.disableControls();
-      String current = requestedFiles.removeAt(0);
+      //String current = requestedFiles.removeAt(0);
+      String current = requestedFiles[0];
       currentRequestedFile = current;
       qClient.sendArrayBufferReliable(otherId, new RequestFilePacket(current).toBuffer()).then((int i) {
         print("Request file packet sent");
