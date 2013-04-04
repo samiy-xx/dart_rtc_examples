@@ -42,7 +42,7 @@ void main() {
       int s = 1;
       t = new Timer.periodic(const Duration(milliseconds: 1000), (Timer t) {
         String toSend = " ${reliable ? reliableString : unreliableString} sequence = $s";
-        client.sendArrayBuffer(otherId, BinaryData.bufferFromString(toSend)).then((int rtt) {
+        client.sendArrayBufferReliable(otherId, BinaryData.bufferFromString(toSend)).then((int rtt) {
           insertString("Sent buffer reliable = $reliable sequence = $s milliseconds $rtt");
         });
         s++;

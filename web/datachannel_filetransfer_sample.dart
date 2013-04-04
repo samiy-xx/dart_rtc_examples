@@ -130,7 +130,7 @@ void main() {
     else if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
       receivedTotal = 0;
-      
+
       Map m = json.parse(BinaryData.stringFromBuffer(e.buffer));
       if (m.containsKey('packetType')) {
         int packetType = m['packetType'];
@@ -142,13 +142,17 @@ void main() {
             break;
           case PeerPacket.TYPE_REQUEST_FILE:
             p = RequestFilePacket.fromMap(m);
-            fm.readFile(p.fileName).then((ArrayBuffer buffer) {
-              em.disableControls();
-              qClient.sendFile(otherId, buffer).then((int b) {
-                em.enableControls();
-                new Logger().Debug("FILE SENT");
+            if (!isTransfering) {
+              fm.readFile(p.fileName).then((ArrayBuffer buffer) {
+                em.disableControls();
+                isTransfering = true;
+                qClient.sendFile(otherId, buffer).then((int b) {
+                  em.enableControls();
+                  new Logger().Debug("FILE SENT");
+                  isTransfering = false;
+                });
               });
-            });
+            }
             break;
           default:
             p = null;
