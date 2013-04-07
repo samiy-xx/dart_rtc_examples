@@ -15,7 +15,7 @@ void main() {
 
   AlbumCanvas ac = new AlbumCanvas(query("#albumcanvas"));
   List<String> peers = new List<String>();
-  final int channelLimit = 2;
+  final int channelLimit = 10;
 
   ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
