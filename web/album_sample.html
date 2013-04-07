@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>P2P Image</title>
+    <link rel="stylesheet" href="css/album_sample.css">
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="header">
+        <h1>Dart - P2P Image</h1>
+      </div>
+      <div id="application">
+        <div class="progress_wrapper">
+          <progress id="progress_bar" max="100" value="0"></progress>
+        </div>
+        <div id="album">
+          <canvas id="albumcanvas"></canvas>
+        </div>
+        <div id="controls">
+          <input type="file" id="file"/>
+        </div></div>
+      </div>
+    </div>
+    <div id="key" style="display: none">abc</div>
+    <script type="application/dart" src="album_sample.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>

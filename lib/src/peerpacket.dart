@@ -72,6 +72,30 @@ class RequestFilePacket extends PeerPacket {
   }
 }
 
+class FileNamePacket extends PeerPacket {
+  String fileName;
+  int get packetType => _packetType;
+
+  FileNamePacket(this.fileName) : super(PeerPacket.TYPE_REQUEST_FILE);
+
+  Map toMap() {
+    return {
+      'packetType' : _packetType,
+      'fileName': fileName
+    };
+  }
+
+  static FileNamePacket fromMap(Map m) {
+    return new FileNamePacket(m['fileName']);
+  }
+
+  static FileNamePacket fromBuffer(ArrayBuffer buffer) {
+    String s = BinaryData.stringFromBuffer(buffer);
+    Map m = json.parse(s);
+    return fromMap(m);
+  }
+}
+
 class StartDrawPacket extends PeerPacket {
   int get packetType => _packetType;
   int x;
