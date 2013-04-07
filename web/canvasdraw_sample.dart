@@ -12,8 +12,6 @@ void main() {
   final String key = query("#key").text;
   final int channelLimit = 10;
 
-
-
   ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
@@ -49,15 +47,15 @@ void main() {
     if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
 
-      Map m = json.parse(BinaryData.stringFromBuffer(e.buffer));
+      Map m = json.parse(BinaryData.stringFromBuffer(bbc.buffer));
       if (m.containsKey('packetType')) {
         int packetType = m['packetType'];
         if (packetType == PeerPacket.TYPE_START_DRAW) {
-          draw.startDraw(e.peer.id, StartDrawPacket.fromMap(m));
+          draw.startDraw(bbc.peer.id, StartDrawPacket.fromMap(m));
         } else if (packetType == PeerPacket.TYPE_UPDATE_DRAW) {
-          draw.updateDraw(e.peer.id, UpdateDrawPacket.fromMap(m));
+          draw.updateDraw(bbc.peer.id, UpdateDrawPacket.fromMap(m));
         } else if (packetType == PeerPacket.TYPE_END_DRAW) {
-          draw.endDraw(e.peer.id, EndDrawPacket.fromMap(m));
+          draw.endDraw(bbc.peer.id, EndDrawPacket.fromMap(m));
         }
       }
     }

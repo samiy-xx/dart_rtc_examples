@@ -6,6 +6,9 @@ abstract class PeerPacket {
   static const int TYPE_START_DRAW = 3;
   static const int TYPE_UPDATE_DRAW = 4;
   static const int TYPE_END_DRAW = 5;
+  static const int TYPE_UPDATE_PADDLE = 6;
+  static const int TYPE_UPDATE_VELOCITY = 7;
+  static const int TYPE_CREATE_BALL = 8;
   final int _packetType;
   int get packetType;
 
@@ -143,4 +146,72 @@ class EndDrawPacket extends PeerPacket {
   }
 }
 
+class UpdatePaddlePacket extends PeerPacket {
+  int get packetType => _packetType;
+  double y;
+  UpdatePaddlePacket(this.y) : super(PeerPacket.TYPE_UPDATE_PADDLE);
+
+  Map toMap() {
+    return {
+      'packetType' : _packetType,
+      'y': y
+    };
+  }
+
+  static UpdatePaddlePacket fromMap(Map m) {
+    return new UpdatePaddlePacket(m['y']);
+  }
+
+  static UpdatePaddlePacket fromBuffer(ArrayBuffer buffer) {
+    String s = BinaryData.stringFromBuffer(buffer);
+    Map m = json.parse(s);
+    return fromMap(m);
+  }
+}
+
+class UpdateVelocityPacket extends PeerPacket {
+  int get packetType => _packetType;
+  double x;
+  double y;
+  UpdateVelocityPacket(this.x, this.y) : super(PeerPacket.TYPE_UPDATE_VELOCITY);
+
+  Map toMap() {
+    return {
+      'packetType' : _packetType,
+      'x': x,
+      'y': y
+    };
+  }
+
+  static UpdateVelocityPacket fromMap(Map m) {
+    return new UpdateVelocityPacket(m['x'], m['y']);
+  }
+
+  static UpdateVelocityPacket fromBuffer(ArrayBuffer buffer) {
+    String s = BinaryData.stringFromBuffer(buffer);
+    Map m = json.parse(s);
+    return fromMap(m);
+  }
+}
+
+class CreateBallPacket extends PeerPacket {
+  int get packetType => _packetType;
+  CreateBallPacket() : super(PeerPacket.TYPE_CREATE_BALL);
+
+  Map toMap() {
+    return {
+      'packetType' : _packetType
+    };
+  }
+
+  static CreateBallPacket fromMap(Map m) {
+    return new CreateBallPacket();
+  }
+
+  static CreateBallPacket fromBuffer(ArrayBuffer buffer) {
+    String s = BinaryData.stringFromBuffer(buffer);
+    Map m = json.parse(s);
+    return fromMap(m);
+  }
+}
 
