@@ -9,6 +9,7 @@ abstract class PeerPacket {
   static const int TYPE_UPDATE_PADDLE = 6;
   static const int TYPE_UPDATE_VELOCITY = 7;
   static const int TYPE_CREATE_BALL = 8;
+  static const int TYPE_UPDATE_POSITION = 9;
   final int _packetType;
   int get packetType;
 
@@ -188,6 +189,33 @@ class UpdateVelocityPacket extends PeerPacket {
   }
 
   static UpdateVelocityPacket fromBuffer(ArrayBuffer buffer) {
+    String s = BinaryData.stringFromBuffer(buffer);
+    Map m = json.parse(s);
+    return fromMap(m);
+  }
+}
+
+class UpdatePositionPacket extends PeerPacket {
+  int get packetType => _packetType;
+  double x;
+  double y;
+  num angle;
+  UpdatePositionPacket(this.x, this.y, this.angle) : super(PeerPacket.TYPE_UPDATE_POSITION);
+
+  Map toMap() {
+    return {
+      'packetType' : _packetType,
+      'x': x,
+      'y': y,
+      'angle': angle
+    };
+  }
+
+  static UpdatePositionPacket fromMap(Map m) {
+    return new UpdatePositionPacket(m['x'], m['y'], m['angle']);
+  }
+
+  static UpdatePositionPacket fromBuffer(ArrayBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);

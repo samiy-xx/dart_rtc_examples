@@ -9,6 +9,11 @@ import 'package:box2d/box2d_browser.dart';
 import '../../dart_rtc_client/lib/rtc_client.dart';
 import '../../dart_rtc_common/lib/rtc_common.dart';
 
+/**
+ * Just a test sample..
+ * Would need some very heavy tuning to be a real network enabled pong, like network packet prediction and such.
+ *
+ */
 void main() {
   final String key = query("#key").text;
   final int channelLimit = 2;
@@ -64,6 +69,9 @@ void main() {
         } else if (packetType == PeerPacket.TYPE_UPDATE_VELOCITY) {
           UpdateVelocityPacket p = UpdateVelocityPacket.fromMap(m);
           pong.receiveVelocityUpdate(p.x, p.y);
+        } else if (packetType == PeerPacket.TYPE_UPDATE_POSITION) {
+          UpdatePositionPacket upp = UpdatePositionPacket.fromMap(m);
+          pong.receivePositionUpdate(upp.x, upp.y, upp.angle);
         }
       }
     }
@@ -73,7 +81,7 @@ void main() {
 }
 
 abstract class Game {
-  
+
 }
 
 class PeerPong extends Game {
@@ -88,8 +96,8 @@ class PeerPong extends Game {
   final int GAME_STATE_PLAY = 1;
   int _currentGameState;
   ChannelClient _client;
-  CanvasElement _canvas;  
-  CanvasRenderingContext2D _ctx;  
+  CanvasElement _canvas;
+  CanvasRenderingContext2D _ctx;
   ViewportTransform _viewport;
   DebugDraw _debugDraw;
   World _world;
@@ -105,8 +113,10 @@ class PeerPong extends Game {
   bool _hosting = true;
   int _lastUpdate;
   String _otherId;
+  vec2 _lastPosition;
   PongContactListener _contact;
-  
+  Timer _timer;
+
   PeerPong(CanvasElement c, ChannelClient client) {
     _currentGameState = GAME_STATE_PAUSE;
     _canvas = c;
@@ -123,58 +133,65 @@ class PeerPong extends Game {
     _debugDraw = new CanvasDraw(_viewport, _ctx);
     _world.debugDraw = _debugDraw;
     _contact = new PongContactListener();
-    
+    _lastPosition = new vec2(0, 0);
     _world.contactListener = _contact;
     _bodies = new List<Body>();
     _lastUpdate = new DateTime.now().millisecondsSinceEpoch;
+    _timer = new Timer.periodic(const Duration(milliseconds: 50), _onTick);
     runLoop();
     setupSomething();
   }
-  
+
   int randomDirection() {
     int r = new Random().nextInt(1);
     return r == 0 ? -60 : 60;
   }
-  
+
   void setOtherId(String id) {
     _otherId = id;
   }
   void removeOtherId() {
     _otherId = null;
   }
-  
+
   void setChannelData(String channel, bool hosting) {
     _channel = channel;
     _hosting = hosting;
-    
+
     if (hosting) {
       _localPaddle = _leftPaddle;
       _remotePaddle = _rightPaddle;
-      
+
       _contact.onBeginContact = (Contact c) {
-        
+        _signalBallPosition();
       };
-      
+
       _contact.onEndContact = (Contact c) {
         _signalVelocityChange(_ball.linearVelocity);
       };
-      
+
     } else {
       _localPaddle = _rightPaddle;
       _remotePaddle = _leftPaddle;
     }
   }
-  
+
   void receiveCreateBall() {
     _ball = createBall();
   }
-  
+
   void receiveVelocityUpdate(double x, double y) {
     print("Received velocity update");
     vec2 v = new vec2(x, y);
     _ball.linearVelocity = v;
   }
-  
+
+  void receivePositionUpdate(double x, double y, double angle) {
+    print("recv pos");
+    vec2 pos = new vec2(x, y);
+    _ball.setTransform(pos, angle);
+  }
+
   void _onMouseDown(MouseEvent e) {
     if (_currentGameState == GAME_STATE_PAUSE) {
       int dir = randomDirection();
@@ -187,61 +204,83 @@ class PeerPong extends Game {
       _currentGameState = GAME_STATE_PLAY;
     }
   }
-  
+
+  void _onTick(Timer t) {
+    if (_ball == null)
+      return;
+
+
+    vec2 current = _ball.position;
+    if (current.x != _lastPosition.x && current.y != _lastPosition.y) {
+      print("pos");
+      _signalBallPosition();
+      _lastPosition = current;
+    }
+  }
+
   Future<int> _signalCreateBall() {
     if (_otherId == null)
       return new Future.immediate(0);
-    
+
     return _client.sendArrayBufferReliable(_otherId, new CreateBallPacket().toBuffer());
   }
-  
+
   _signalVelocityChange(vec2 v) {
     if (_otherId == null)
       return;
-    
+
     _client.sendArrayBufferReliable(_otherId, new UpdateVelocityPacket(v.x, v.y).toBuffer());
   }
-  
+
+  _signalBallPosition() {
+    if (_otherId == null)
+      return;
+
+    vec2 ballPosition = _ball.position;
+    num ballAngle = _ball.angle;
+
+    _client.sendArrayBufferReliable(_otherId, new UpdatePositionPacket(ballPosition.x, ballPosition.y, ballAngle).toBuffer());
+  }
   void _onMouseMove(MouseEvent e) {
     if (_localPaddle == null)
       return;
-    
+
     double y = (CANVAS_HEIGHT - e.offset.y).toDouble() / VIEWPORT_SCALE;
-    
-    //_localPaddle.position.y = y;
+
+
     _localPaddle.setTransform(new vec2(_localPaddle.position.x, y), _localPaddle.angle);
     int now = new DateTime.now().millisecondsSinceEpoch;
-    if (now > _lastUpdate + 50) {
+    if (now > _lastUpdate + 30) {
       _signalMouseMove(y);
       _lastUpdate = now;
     }
   }
-  
+
   void setRemotePaddle(double y) {
     _remotePaddle.position.y = y;
   }
-  
+
   void _signalMouseMove(double y) {
     if (_otherId == null)
       return;
-    
+
     _client.sendArrayBufferUnReliable(_otherId, new UpdatePaddlePacket(y).toBuffer());
   }
-  
+
   void step(double t) {
     _world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
     _ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     _world.drawDebugData();
-    
+
     window.requestAnimationFrame((num time) { step(time); });
   }
-  
+
   void runLoop() {
-    window.requestAnimationFrame((num time) { 
+    window.requestAnimationFrame((num time) {
       step(time);
     });
   }
-  
+
   void setupSomething() {
     createTopWall();
     createBottomWall();
@@ -249,13 +288,13 @@ class PeerPong extends Game {
     createRightWall();
     _leftPaddle = createLocalPaddle();
     _rightPaddle = createRemotePaddle();
-    
+
   }
-  
+
   void setListener() {
-    
+
   }
-  
+
   Body createBall() {
     // Create a bouncing ball.
     final bouncingCircle = new CircleShape();
@@ -276,10 +315,10 @@ class PeerPong extends Game {
     final activeBody = _world.createBody(activeBodyDef);
     _bodies.add(activeBody);
     activeBody.createFixture(activeFixtureDef);
-    
+
     return activeBody;
   }
-  
+
   void createTopWall() {
     FixtureDef fd = new FixtureDef();
     PolygonShape sd = new PolygonShape();
@@ -292,7 +331,7 @@ class PeerPong extends Game {
     body.createFixture(fd);
     _bodies.add(body);
   }
-  
+
   void createBottomWall() {
     FixtureDef fd = new FixtureDef();
     PolygonShape sd = new PolygonShape();
@@ -305,7 +344,7 @@ class PeerPong extends Game {
     body.createFixture(fd);
     _bodies.add(body);
   }
-  
+
   void createLeftWall() {
     FixtureDef fd = new FixtureDef();
     PolygonShape sd = new PolygonShape();
@@ -318,7 +357,7 @@ class PeerPong extends Game {
     body.createFixture(fd);
     _bodies.add(body);
   }
-  
+
   void createRightWall() {
     FixtureDef fd = new FixtureDef();
     PolygonShape sd = new PolygonShape();
@@ -331,7 +370,7 @@ class PeerPong extends Game {
     body.createFixture(fd);
     _bodies.add(body);
   }
-  
+
   Body createLocalPaddle() {
     FixtureDef fd = new FixtureDef();
     PolygonShape sd = new PolygonShape();
@@ -344,12 +383,12 @@ class PeerPong extends Game {
     bd.position = new vec2(- 750.0 / VIEWPORT_SCALE, 250.0 / VIEWPORT_SCALE);
     final body = _world.createBody(bd);
     body.createFixture(fd);
-    
+
     _bodies.add(body);
-    
+
     return body;
   }
-  
+
   Body createRemotePaddle() {
     FixtureDef fd = new FixtureDef();
     PolygonShape sd = new PolygonShape();
@@ -363,7 +402,7 @@ class PeerPong extends Game {
     final body = _world.createBody(bd);
     body.createFixture(fd);
     _bodies.add(body);
-    
+
     return body;
   }
 }
@@ -371,28 +410,28 @@ class PeerPong extends Game {
 class PongContactListener implements ContactListener {
   Function _onBeginContact;
   Function _onEndContact;
-  
+
   set onBeginContact(Function c) => _onBeginContact = c;
   set onEndContact(Function c) => _onEndContact = c;
-  
+
   void beginContact(Contact contact) {
     print("beginContact");
     if (_onBeginContact != null)
       _onBeginContact(contact);
   }
-  
+
   void endContact(Contact contact) {
     print("endContact");
     if (_onEndContact != null)
       _onEndContact(contact);
   }
-  
+
   void preSolve(Contact contact, Manifold oldManifold) {
-    
+
   }
-  
+
   void postSolve(Contact contact, ContactImpulse impulse) {
-    
+
   }
 }
 
