@@ -16,7 +16,7 @@ part "src/videocontainer.dart";
 part "src/webmediamanager.dart";
 part "src/notifier.dart";
 part "src/weblogger.dart";
-part "src/filemanager.dart";
+
 part "src/dndmanager.dart";
 part "src/fileevent.dart";
 part "src/resizer.dart";

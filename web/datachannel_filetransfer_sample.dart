@@ -130,35 +130,30 @@ void main() {
     else if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
       receivedTotal = 0;
+      Map m = json.parse(BinaryData.stringFromBuffer(bbc.buffer));
+      if (!m.containsKey('packetType'))
+        return;
 
-      Map m = json.parse(BinaryData.stringFromBuffer(e.buffer));
-      if (m.containsKey('packetType')) {
-        int packetType = m['packetType'];
-        PeerPacket p;
-        switch (packetType) {
-          case PeerPacket.TYPE_DIRECTORY_ENTRY:
-            p = DirectoryEntryPacket.fromMap(m);
-            em.appendToRemoteFiles(p.fileName, p.fileSize);
-            break;
-          case PeerPacket.TYPE_REQUEST_FILE:
-            p = RequestFilePacket.fromMap(m);
-            if (!isTransfering) {
-              fm.readFile(p.fileName).then((ArrayBuffer buffer) {
-                em.disableControls();
-                isTransfering = true;
-                qClient.sendFile(otherId, buffer).then((int b) {
-                  em.enableControls();
-                  new Logger().Debug("FILE SENT");
-                  isTransfering = false;
-                });
-              });
-            }
-            break;
-          default:
-            p = null;
-            break;
+      int packetType = m['packetType'];
+      if (packetType == PeerPacket.TYPE_DIRECTORY_ENTRY) {
+        DirectoryEntryPacket p = DirectoryEntryPacket.fromMap(m);
+        em.appendToRemoteFiles(p.fileName, p.fileSize);
+      }
+
+      else if (packetType == PeerPacket.TYPE_REQUEST_FILE) {
+        RequestFilePacket p = RequestFilePacket.fromMap(m);
+        if (!isTransfering) {
+          fm.readFile(p.fileName).then((ArrayBuffer buffer) {
+            em.disableControls();
+            isTransfering = true;
+            qClient.sendFile(otherId, buffer).then((int b) {
+              em.enableControls();
+              new Logger().Debug("FILE SENT");
+              isTransfering = false;
+            });
+          });
         }
-    }
+      }
     }
   });
 

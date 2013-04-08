@@ -14,6 +14,7 @@ void main() {
   progress.style.display = "none";
 
   AlbumCanvas ac = new AlbumCanvas(query("#albumcanvas"));
+  Thumbnailer thumb = new Thumbnailer();
   List<String> peers = new List<String>();
   final int channelLimit = 10;
 
@@ -57,10 +58,19 @@ void main() {
 
     else if (e is BinaryFileCompleteEvent) {
       BinaryFileCompleteEvent bfce = e;
-      ac.setImageFromBlob(bfce.blob);
-      new Timer(const Duration(milliseconds: 2000), () {
-        progress.style.display = "none";
+      ac.setImageFromBlob(bfce.blob).then((ImageElement img) {
+        String dataUrl = thumb.render(img);
+        ImageElement test = new ImageElement();
+        test.onLoad.listen((Event e) {
+          query("#controls").nodes.add(test);
+        });
+        test.src = dataUrl;
+
+        new Timer(const Duration(milliseconds: 2000), () {
+          progress.style.display = "none";
+        });
       });
+
     }
 
     else if (e is BinaryChunkEvent) {
@@ -74,9 +84,11 @@ void main() {
 
   FileUploadInputElement fuie = query("#file");
   FileReader reader = new FileReader();
+  String currentFileName;
   fuie.onChange.listen((Event e) {
     for (int i = 0; i < fuie.files.length; i++) {
       File file = fuie.files[i];
+      currentFileName = file.name;
       reader.readAsArrayBuffer(file);
     }
   });
@@ -85,7 +97,7 @@ void main() {
     ArrayBuffer data = reader.result;
     print("read buffer");
     peers.forEach((String id) {
-      client.sendArrayBufferReliable(id, new FileNamePacket("blob").toBuffer()).then((int i) {
+      client.sendArrayBufferReliable(id, new FileNamePacket(currentFileName).toBuffer()).then((int i) {
         client.sendFile(id, data).then((int i) {
           int seconds = i > 0 ? i ~/ 1000 : 0;
           print("Sent image to id $id in $seconds seconds");
@@ -98,6 +110,36 @@ void main() {
   client.initialize();
 }
 
+class Thumbnailer {
+  CanvasElement _canvas;
+  CanvasRenderingContext2D _ctx;
+
+  int _canvasWidth = 300;
+  int _canvasHeight = 200;
+  set width(int w) => setCanvasWidth(w);
+  set Height(int h) => _canvasHeight = h;
+  CanvasElement get canvas => _canvas;
+
+  Thumbnailer() {
+    _canvas = new CanvasElement();
+    _ctx = _canvas.context2d;
+  }
+
+  void setCanvasWidth(int w) {
+    _canvas.width = w;
+    _canvasWidth = w;
+  }
+
+  void setCanvasHeight(int h) {
+    _canvas.height = h;
+    _canvasHeight = h;
+  }
+
+  String render(ImageElement img) {
+    _ctx.drawImageScaled(img, 0, 0, _canvasWidth, _canvasHeight);
+    return _canvas.toDataUrl("image/png");
+  }
+}
 
 class AlbumCanvas {
   const int CANVAS_WIDTH = 800;
@@ -112,15 +154,16 @@ class AlbumCanvas {
     _canvas.width = CANVAS_WIDTH;
   }
 
-  setImageFromBuffer(ArrayBuffer buffer) {
-    _setImageFromUrl(Url.createObjectUrl(new Blob([new Uint8Array.fromBuffer(buffer)])));
+  Future<ImageElement> setImageFromBuffer(ArrayBuffer buffer) {
+    return _setImageFromUrl(Url.createObjectUrl(new Blob([new Uint8Array.fromBuffer(buffer)])));
   }
 
-  setImageFromBlob(Blob blob) {
-    _setImageFromUrl(Url.createObjectUrl(blob));
+  Future<ImageElement> setImageFromBlob(Blob blob) {
+    return _setImageFromUrl(Url.createObjectUrl(blob));
   }
 
-  void _setImageFromUrl(String url) {
+  Future<ImageElement>_setImageFromUrl(String url) {
+    Completer<ImageElement> completer = new Completer<ImageElement>();
     ImageElement img = new ImageElement();
     img.onLoad.listen((Event e) {
       _clear();
@@ -130,8 +173,10 @@ class AlbumCanvas {
         _ctx.drawImageScaled(img, 0, 0, _canvas.width, img.height * (_canvas.width/img.width));
       }
       Url.revokeObjectUrl(url);
+      completer.complete(img);
     });
     img.src = url;
+    return completer.future;
   }
 
   void _clear() {
