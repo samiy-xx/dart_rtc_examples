@@ -10,6 +10,7 @@ abstract class PeerPacket {
   static const int TYPE_UPDATE_VELOCITY = 7;
   static const int TYPE_CREATE_BALL = 8;
   static const int TYPE_UPDATE_POSITION = 9;
+  static const int TYPE_RECEIVE_FILENAME = 10;
   final int _packetType;
   int get packetType;
 
@@ -76,7 +77,7 @@ class FileNamePacket extends PeerPacket {
   String fileName;
   int get packetType => _packetType;
 
-  FileNamePacket(this.fileName) : super(PeerPacket.TYPE_REQUEST_FILE);
+  FileNamePacket(this.fileName) : super(PeerPacket.TYPE_RECEIVE_FILENAME);
 
   Map toMap() {
     return {

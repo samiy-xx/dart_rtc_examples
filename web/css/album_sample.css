@@ -27,12 +27,14 @@ h1, p {
 }
 
 #container {
-    width: 825px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 #application {
+  
+  float: left;
+  width: 70%;
   border: 1px solid #000;
   background: #eee;
   margin-right: 5px;
@@ -42,11 +44,40 @@ h1, p {
     -moz-box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.79);
     -webkit-box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.79);
 }
-
+#files {
+  float: right;
+  width: 27%;
+  margin-right: 5px;
+  background: #eee;
+  border: 1px solid #000;
+  height: 550px;
+  overflow: auto;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.79);
+    -moz-box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.79);
+    -webkit-box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.79);
+}
 #album {
   height: 500px;
 }
 
 #controls {
   height: 40px;
+  background: #ccc;
 }
+
+.fileEntry {
+  margin: 5px;
+  vertical-align: center
+}
+.fileEntry:nth-child(odd) {
+  background: #fff;
+}
+
+.addButton {
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #000;
+  width: 100px;
+  text-align: center;
+}
+
