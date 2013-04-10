@@ -11,12 +11,17 @@ import '../../dart_rtc_common/lib/rtc_common.dart';
 void main() {
   final String key = query("#key").text;
   DivElement album = query("#album");
+  DivElement application = query("#application");
   ProgressElement progress = query("#progress_bar");
-  progress.style.width = "800px";
+  progress.style.width = "${application.clientWidth - 10}px";
   progress.style.display = "none";
-
+  
+  String currentFileName;
   AlbumCanvas ac = new AlbumCanvas(query("#albumcanvas"));
   Thumbnailer thumb = new Thumbnailer();
+  thumb.setCanvasHeight(30);
+  thumb.setCanvasWidth(50);
+  
   List<String> peers = new List<String>();
   final int channelLimit = 10;
 
@@ -56,17 +61,25 @@ void main() {
   client.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
+      Map m = json.parse(BinaryData.stringFromBuffer(bbc.buffer));
+      if (m.containsKey('packetType')) {
+        int packetType = m['packetType'];
+        if (packetType == PeerPacket.TYPE_RECEIVE_FILENAME) {
+          currentFileName = FileNamePacket.fromMap(m).fileName;
+        }
+      }
     }
 
     else if (e is BinaryFileCompleteEvent) {
       BinaryFileCompleteEvent bfce = e;
       ac.setImageFromBlob(bfce.blob).then((ImageElement img) {
-        String dataUrl = thumb.render(img);
-        ImageElement test = new ImageElement();
-        test.onLoad.listen((Event e) {
-          query("#controls").nodes.add(test);
+        String oUrl = Url.createObjectUrl(bfce.blob);
+       
+        ImageElement thumbImg = new ImageElement();
+        thumbImg.onLoad.listen((Event e) {
+          query("#files").append(buildEntry(thumbImg, currentFileName, oUrl));
         });
-        test.src = dataUrl;
+        thumbImg.src = thumb.getDataUrl(img);
 
         new Timer(const Duration(milliseconds: 2000), () {
           progress.style.display = "none";
@@ -99,9 +112,12 @@ void main() {
 
   });
 
-  FileUploadInputElement fuie = query("#file");
+  FileUploadInputElement fuie = new FileUploadInputElement();
+  Element openFileButton = query("#addButton");
+  openFileButton.onClick.listen((Event e) => fuie.click());
+  
   FileReader reader = new FileReader();
-  String currentFileName;
+  
   fuie.onChange.listen((Event e) {
     for (int i = 0; i < fuie.files.length; i++) {
       File file = fuie.files[i];
@@ -127,20 +143,54 @@ void main() {
   client.initialize();
 }
 
-class Thumbnailer {
+DivElement buildEntry(ImageElement img, String fileName, String url) {
+  DivElement entry = new DivElement();
+  entry.classes.add("fileEntry");
+  
+  SpanElement imgSpan = new SpanElement();
+  imgSpan.append(img);
+  imgSpan.classes.add("imgSpan");
+  
+  AnchorElement link = new AnchorElement();
+  link.text = fileName;
+  link.href = url;
+  link.download = fileName;
+  
+  SpanElement fileNameSpan = new SpanElement();
+  fileNameSpan.append(link);
+  fileNameSpan.classes.add("fileNameSpan");
+  
+  entry.append(imgSpan);
+  entry.append(fileNameSpan);
+  
+  return entry;
+}
+
+class CanvasThingy {
   CanvasElement _canvas;
   CanvasRenderingContext2D _ctx;
+  CanvasElement get canvas => _canvas;
+  CanvasThingy() {
+    _canvas = new CanvasElement();
+    _ctx = _canvas.context2d;
+  }
+}
 
+class FullsizeNailer extends CanvasThingy {
+  FullsizeNailer() : super();
+  String getDataUrl(ImageElement img) {
+    _ctx.drawImageScaled(img, 0, 0, img.width, img.height);
+    return _canvas.toDataUrl("image/png");
+  }
+}
+
+class Thumbnailer extends CanvasThingy {
   int _canvasWidth = 300;
   int _canvasHeight = 200;
   set width(int w) => setCanvasWidth(w);
   set Height(int h) => _canvasHeight = h;
-  CanvasElement get canvas => _canvas;
 
-  Thumbnailer() {
-    _canvas = new CanvasElement();
-    _ctx = _canvas.context2d;
-  }
+  Thumbnailer() : super();
 
   void setCanvasWidth(int w) {
     _canvas.width = w;
@@ -152,7 +202,7 @@ class Thumbnailer {
     _canvasHeight = h;
   }
 
-  String render(ImageElement img) {
+  String getDataUrl(ImageElement img) {
     _ctx.drawImageScaled(img, 0, 0, _canvasWidth, _canvasHeight);
     return _canvas.toDataUrl("image/png");
   }
@@ -168,9 +218,15 @@ class AlbumCanvas {
     _canvas = c;
     _ctx = c.context2d;
     _canvas.height = CANVAS_HEIGHT;
-    _canvas.width = CANVAS_WIDTH;
+    _canvas.width = getWidth();
   }
-
+  
+  int getWidth() {
+    int w = _canvas.parent.clientWidth;
+    print(w);
+    return w;
+  }
+  
   Future<ImageElement> setImageFromBuffer(ArrayBuffer buffer) {
     return _setImageFromUrl(Url.createObjectUrl(new Blob([new Uint8Array.fromBuffer(buffer)])));
   }
