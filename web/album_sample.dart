@@ -3,8 +3,10 @@ import "dart:async";
 import 'dart:json' as json;
 
 import '../lib/demo_client.dart';
-import 'package:dart_rtc_common/rtc_common.dart';
-import 'package:dart_rtc_client/rtc_client.dart';
+//import 'package:dart_rtc_common/rtc_common.dart';
+//import 'package:dart_rtc_client/rtc_client.dart';
+import '../../dart_rtc_client/lib/rtc_client.dart';
+import '../../dart_rtc_common/lib/rtc_common.dart';
 
 void main() {
   final String key = query("#key").text;
@@ -70,7 +72,6 @@ void main() {
           progress.style.display = "none";
         });
       });
-
     }
 
     else if (e is BinaryChunkEvent) {
@@ -80,6 +81,22 @@ void main() {
       progress.max = bce.totalSequences;
       progress.value = bce.sequence;
     }
+
+    else if (e is BinarySendCompleteEvent) {
+      BinarySendCompleteEvent bsce = e;
+      print("Send complete");
+    }
+
+    else if (e is BinaryChunkWriteEvent) {
+      BinaryChunkWriteEvent bcwrite = e;
+      print("Writing chunk");
+    }
+
+    else if (e is BinaryChunkWroteEvent) {
+      BinaryChunkWroteEvent bcwrote = e;
+      print("Wrote chunk");
+    }
+
   });
 
   FileUploadInputElement fuie = query("#file");
