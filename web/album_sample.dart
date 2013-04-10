@@ -15,13 +15,13 @@ void main() {
   ProgressElement progress = query("#progress_bar");
   progress.style.width = "${application.clientWidth - 10}px";
   progress.style.display = "none";
-  
+
   String currentFileName;
   AlbumCanvas ac = new AlbumCanvas(query("#albumcanvas"));
   Thumbnailer thumb = new Thumbnailer();
   thumb.setCanvasHeight(30);
   thumb.setCanvasWidth(50);
-  
+
   List<String> peers = new List<String>();
   final int channelLimit = 10;
 
@@ -74,7 +74,7 @@ void main() {
       BinaryFileCompleteEvent bfce = e;
       ac.setImageFromBlob(bfce.blob).then((ImageElement img) {
         String oUrl = Url.createObjectUrl(bfce.blob);
-       
+
         ImageElement thumbImg = new ImageElement();
         thumbImg.onLoad.listen((Event e) {
           query("#files").append(buildEntry(thumbImg, currentFileName, oUrl));
@@ -89,35 +89,36 @@ void main() {
 
     else if (e is BinaryChunkEvent) {
       BinaryChunkEvent bce = e;
+      print(bce.sequence);
       if (progress.style.display == "none")
         progress.style.display = "block";
       progress.max = bce.totalSequences;
       progress.value = bce.sequence;
     }
 
-    else if (e is BinarySendCompleteEvent) {
-      BinarySendCompleteEvent bsce = e;
-      print("Send complete");
-    }
-
     else if (e is BinaryChunkWriteEvent) {
       BinaryChunkWriteEvent bcwrite = e;
-      print("Writing chunk");
+
     }
 
     else if (e is BinaryChunkWroteEvent) {
       BinaryChunkWroteEvent bcwrote = e;
-      print("Wrote chunk");
+      print("Wrote");
+      if (progress.style.display == "none")
+        progress.style.display = "block";
+      progress.max = bcwrote.totalSequences;
+      progress.value = bcwrote.sequence;
     }
 
   });
 
   FileUploadInputElement fuie = new FileUploadInputElement();
+  fuie.accept ="image/*";
   Element openFileButton = query("#addButton");
   openFileButton.onClick.listen((Event e) => fuie.click());
-  
+
   FileReader reader = new FileReader();
-  
+
   fuie.onChange.listen((Event e) {
     for (int i = 0; i < fuie.files.length; i++) {
       File file = fuie.files[i];
@@ -134,6 +135,9 @@ void main() {
         client.sendFile(id, data).then((int i) {
           int seconds = i > 0 ? i ~/ 1000 : 0;
           print("Sent image to id $id in $seconds seconds");
+          new Timer(const Duration(milliseconds: 2000), () {
+            progress.style.display = "none";
+          });
         });
       });
     });
@@ -146,23 +150,23 @@ void main() {
 DivElement buildEntry(ImageElement img, String fileName, String url) {
   DivElement entry = new DivElement();
   entry.classes.add("fileEntry");
-  
+
   SpanElement imgSpan = new SpanElement();
   imgSpan.append(img);
   imgSpan.classes.add("imgSpan");
-  
+
   AnchorElement link = new AnchorElement();
   link.text = fileName;
   link.href = url;
   link.download = fileName;
-  
+
   SpanElement fileNameSpan = new SpanElement();
   fileNameSpan.append(link);
   fileNameSpan.classes.add("fileNameSpan");
-  
+
   entry.append(imgSpan);
   entry.append(fileNameSpan);
-  
+
   return entry;
 }
 
@@ -220,13 +224,13 @@ class AlbumCanvas {
     _canvas.height = CANVAS_HEIGHT;
     _canvas.width = getWidth();
   }
-  
+
   int getWidth() {
     int w = _canvas.parent.clientWidth;
     print(w);
     return w;
   }
-  
+
   Future<ImageElement> setImageFromBuffer(ArrayBuffer buffer) {
     return _setImageFromUrl(Url.createObjectUrl(new Blob([new Uint8Array.fromBuffer(buffer)])));
   }
