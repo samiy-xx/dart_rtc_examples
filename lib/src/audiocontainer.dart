@@ -1,63 +1,41 @@
 part of demo_client;
 
 class AudioContainer extends MediaContainer {
-  MediaManager _manager;
-  AudioElement _audio;
-  DivElement _div;
-
-  String _id;
-  String _url;
-
-  Element get matcher => _audio;
-  AudioElement get audio => _audio;
-  set id(String value) => _id = value;
-  String get id => _id;
-  const String CSS_HIDDEN = "hidden";
-  const String CSS_VISIBLE = "visible";
+  Element get matcher => _media;
+  AudioElement get audio => _media;
 
   /**
    * Constructor
    */
-  AudioContainer(MediaManager manager, String id) {
-    _manager = manager;
-    _id = id;
-    _audio = new AudioElement();
-    _div = new DivElement();
-
-    _div.nodes.add(_audio);
-
-    _audio.onCanPlay.listen(_onCanPlay);
-    _audio.onPlay.listen(_onPlay);
-    _audio.onPause.listen(_onPause);
-    _audio.onEnded.listen(_onStop);
-    _audio.onLoadedMetadata.listen(_onMetadata);
+  AudioContainer(MediaManager manager, String id) : super(manager, id) {
+    _media = new AudioElement();
+    _media.onCanPlay.listen(_onCanPlay);
+    _media.onLoadedMetadata.listen(_onMetadata);
   }
 
+  void mute() {
+    _media.muted = true;
+  }
+
+  void unmute() {
+    _media.muted = false;
+  }
 
   void initialize([bool aux]) {
-    _audio.autoplay = true;
-    _audio.controls = true;
+    _media.autoplay = true;
+    _media.controls = true;
   }
 
   void pause() {
-    _audio.pause();
+    _media.pause();
   }
 
   void play() {
-    _audio.play();
-  }
-
-  void setStream(MediaStream m) {
-    _url = Url.createObjectUrl(m);
-    setUrl(_url);
-  }
-
-  void setUrl(String url) {
-    _audio.src = url;
+    _media.play();
   }
 
   void destroy() {
-    _audio.pause();
+    _media.pause();
     matcher.remove();
   }
 
@@ -66,8 +44,9 @@ class AudioContainer extends MediaContainer {
   }
 
   void _onCanPlay(Event e) {
-    _audio.play();
+    _media.play();
   }
+
   /**
    * Handle play event for video
    */
