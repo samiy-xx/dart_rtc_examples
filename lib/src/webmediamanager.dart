@@ -109,7 +109,6 @@ class WebMediaManager extends MediaManager {
   MediaContainer addVideoContainer(String id, [String target]) {
     MediaContainer vc = createVideoContainer(id);
     MediaContainer main = getMainMediaContainer();
-
     DivElement host;
 
     if (main == null) {
