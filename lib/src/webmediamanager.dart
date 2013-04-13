@@ -44,6 +44,9 @@ class WebVideoManager extends MediaManager {
           vc.isMain = true;
           vc.detach();
           _addMainContainer(vc);
+          new Timer(const Duration(milliseconds : 100), () {
+            vc.play();
+          });
         }
       });
     }
