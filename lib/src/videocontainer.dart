@@ -3,7 +3,6 @@ part of demo_client;
 class VideoContainer extends MediaContainer {
   String _aspectRatio;
   String get aspectRatio => _aspectRatio;
-  Element get matcher => _media;
   VideoElement get video => _media;
 
   VideoContainer(MediaManager manager, String id) : super(manager, id){
@@ -15,9 +14,7 @@ class VideoContainer extends MediaContainer {
     _media.onEnded.listen(_onStop);
     _media.onLoadedMetadata.listen(_onMetadata);
 
-    matcher.onClick.listen((e) {
-      print(_id);
-    });
+    
   }
 
   void initialize([bool aux]) {
@@ -37,17 +34,17 @@ class VideoContainer extends MediaContainer {
   void _onMetadata(Event e) {
     VideoElement video = _media;
     _aspectRatio = Util.aspectRatio(video.videoWidth, video.videoHeight);
-    _manager.setProportions(this);
+    //_manager.setProportions(this);
   }
 
   void _onCanPlay(Event e) {
-
+    _media.play();
   }
   /**
    * Handle play event for video
    */
   void _onPlay(Event e) {
-
+    
   }
 
   /**

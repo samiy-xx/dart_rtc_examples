@@ -1,7 +1,6 @@
 part of demo_client;
 
 class AudioContainer extends MediaContainer {
-  Element get matcher => _media;
   AudioElement get audio => _media;
 
   /**

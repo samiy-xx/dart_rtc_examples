@@ -2,18 +2,32 @@ body {
   margin: 0px;
   padding: 0px;  
   text-align:center;
+  background: #000;
 }
 
-#wrapper {
-  width: 800px;
-  text-align: left;
-  margin: 0px;
-  margin-top: 5px;
-  margin-left: auto;
-  margin-right: auto;
-  border: 1px solid #666;  
-  background: #eee;
-  -moz-box-shadow: 0 0 5px #888;
-  -webkit-box-shadow: 0 0 5px#888;
-  box-shadow: 0 0 5px #888;
+#aux {
+  position: absolute;  
+  bottom: 0px;
+  left: 0px;
+  height: 100px;
+  width: 100%;
+  background: #fff;
+}
+
+.linkarea  {
+  position: relative;
+  height: 20px;
+  background: #ddd;
+  text-align: center;
+}
+
+.auxvideos {
+  position: relative;
+  height: 80px;
+  text-align: center;
+}
+
+video {
+  display: inline-block;
+  opacity:1.0;
 }

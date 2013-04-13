@@ -1,9 +1,19 @@
 part of demo_client;
 
+abstract class MediaManager {
+  MediaContainer getMediaContainer(String id);
+  MediaContainer addMediaContainer(String id);
+  LocalMediaStream _getLocalStream();
+  void setContainer(Element e);
+  
+  String cssify(int m) {
+    return m.toString() + "px";
+  }
+}
 /**
  * Abstract VideoManager
  */
-abstract class MediaManager {
+abstract class OldMediaManager {
   /** Sets the stream to VideoContainer */
   void setStream(MediaStream ms, VideoContainer c);
   void addStream(MediaStream ms, String id, [bool main]);

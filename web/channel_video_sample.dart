@@ -14,11 +14,12 @@ void main() {
   int channelLimit = 5;
   Element c = query("#container");
   Notifier notifier = new Notifier();
-  WebMediaManager vm = new WebMediaManager();
-  vm.setMainContainer("#main");
-  vm.setChildContainer("#aux");
-  VideoContainer vc = vm.addVideoContainer("main_user", "main");
-
+  WebVideoManager vm = new WebVideoManager();
+  //vm.setMainContainer("#wrapper");
+  //vm.setChildContainer("#aux");
+  //vm.setContainer(query("#main"));
+  //VideoContainer vc = vm.addVideoContainer("main_user", "main");
+  VideoContainer vc = vm.addVideoContainer("main");
   ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   //.setChannel("abc")
   .setRequireAudio(true)
@@ -47,16 +48,17 @@ void main() {
 
   qClient.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
     if (e.isLocal) {
-      vm.setLocalStream(e.stream);
-      vc.setStream(e.stream);
+      vm.getVideoContainer("main").setStream(e.stream);
     } else {
-      vm.addStream(e.stream, e.peerWrapper.id);
+      VideoContainer vc = vm.addVideoContainer(e.peerWrapper.id);
+      vc.setStream(e.stream);
     }
+    
   });
 
   qClient.onRemoteMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
     notifier.display("Remote stream removed");
-    vm.removeRemoteStream(e.pw.id);
+    vm.removeVideoContainer(e.pw.id);
   });
 
   qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {

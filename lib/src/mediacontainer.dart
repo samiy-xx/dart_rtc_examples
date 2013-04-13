@@ -9,18 +9,30 @@ abstract class MediaContainer {
   MediaElement _media;
   String _id;
   String _url;
-
+  bool _isMain;
+  
   set id(String value) => _id = value;
+  set isMain(bool value) => _isMain = value;
   String get id => _id;
-
+  bool get isLocal => isLocalStream();
+  bool get isMain => _isMain;
+  MediaStream get mediaStream => _mediaStream;
+  MediaElement get mediaElement => _media;
+  set width(int w) => setWidth(w);
+  set height(int h) => setHeight(h);
   MediaContainer(MediaManager manager, String id) {
     _manager = manager;
     _id = id;
+    _isMain = false;
   }
 
   void destroy();
   void initialize();
 
+  bool isLocalStream() {
+    return _mediaStream != null && _mediaStream is LocalMediaStream;  
+  }
+  
   void play() {
     _media.play();
   }
@@ -37,6 +49,18 @@ abstract class MediaContainer {
     _media.muted = false;
   }
 
+  void detach() {
+    _media.remove();  
+  }
+  
+  void setWidth(int w) {
+    _media.style.width = _cssify(w);
+  }
+  
+  void setHeight(int h) {
+    _media.style.height = _cssify(h);
+  }
+  
   void setStream(MediaStream m) {
     _mediaStream = m;
     if (m is LocalMediaStream)
@@ -84,5 +108,9 @@ abstract class MediaContainer {
     _mediaStream.getAudioTracks().forEach((MediaStreamTrack mst) {
       mst.enabled = true;
     });
+  }
+  
+  String _cssify(int m) {
+    return m.toString() + "px";
   }
 }
