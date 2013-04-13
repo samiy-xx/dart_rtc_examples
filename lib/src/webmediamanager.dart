@@ -68,19 +68,19 @@ class WebVideoManager extends MediaManager {
     VideoElement ve = mc.mediaElement;
     ve.onClick.listen((MouseEvent e) {
       var m = _getMainContainer();
-      m.pause();
+      //m.pause();
       m.isMain = false;
       m.detach();
       _addAuxContainer(m);
       _setAuxVideoDimensions(m, 100, 80);
-      m.play();
+      //m.play();
       
       var c = _getContainerByElement(e.target);
-      c.pause();
+      //c.pause();
       c.detach();
       _addMainContainer(c);
       _maximizeMainVideo();
-      c.play();
+      //c.play();
       c.isMain = true;
     });
     window.setImmediate(() {
