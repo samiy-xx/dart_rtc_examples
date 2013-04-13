@@ -28,7 +28,6 @@ class VideoContainer extends MediaContainer {
 
   void destroy() {
     _media.pause();
-    matcher.remove();
   }
 
   void _onMetadata(Event e) {

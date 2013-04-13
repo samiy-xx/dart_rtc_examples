@@ -81,6 +81,10 @@ class WebVideoManager extends MediaManager {
       _addMainContainer(c);
       _maximizeMainVideo();
       c.play();
+      
+      new Timer(const Duration(milliseconds : 100), () {
+        c.play();
+      });
       c.isMain = true;
     });
     window.setImmediate(() {
