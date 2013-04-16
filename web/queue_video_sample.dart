@@ -45,7 +45,7 @@ void main() {
 
   });
 
-  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) => notifier.display("Signaling connected to server ${e.message}"));
+
   qClient.onQueueEvent.listen((QueueEvent e) => notifier.display("Queue ${e.position}"));
 
   qClient.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
@@ -76,12 +76,14 @@ void main() {
     localVideo.play();
   });
 
-  qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
-    notifier.display("Signaling connection to server has closed (${e.message})");
-    new Timer(const Duration(milliseconds: 10000), () {
-      notifier.display("Attempting to reconnect to server");
-      qClient.initialize();
-    });
+  qClient.onSignalingStateChanged.listen((SignalingStateEvent e) {
+    if (e.state == Signaler.SIGNALING_STATE_OPEN) {
+      qClient.setChannelLimit(channelLimit);
+    } else {
+      new Timer(const Duration(milliseconds: 10000), () {
+        qClient.initialize();
+      });
+    }
   });
 
   qClient.onPacketEvent.listen((PacketEvent e) {

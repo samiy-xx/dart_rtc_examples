@@ -40,10 +40,14 @@ void main() {
     }
   });
 
-  client.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
-    new Timer(const Duration(milliseconds: 10000), () {
-      client.initialize();
-    });
+  client.onSignalingStateChanged.listen((SignalingStateEvent e) {
+    if (e.state == Signaler.SIGNALING_STATE_OPEN) {
+      client.setChannelLimit(channelLimit);
+    } else {
+      new Timer(const Duration(milliseconds: 10000), () {
+        client.initialize();
+      });
+    }
   });
 
   client.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {

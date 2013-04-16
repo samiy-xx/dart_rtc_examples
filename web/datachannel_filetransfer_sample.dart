@@ -42,14 +42,14 @@ void main() {
     }
   });
 
-  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
-
-  });
-
-  qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
-    new Timer(const Duration(milliseconds: 10000), () {
-      qClient.initialize();
-    });
+  qClient.onSignalingStateChanged.listen((SignalingStateEvent e) {
+    if (e.state == Signaler.SIGNALING_STATE_OPEN) {
+      qClient.setChannelLimit(channelLimit);
+    } else {
+      new Timer(const Duration(milliseconds: 10000), () {
+        qClient.initialize();
+      });
+    }
   });
 
   qClient.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {

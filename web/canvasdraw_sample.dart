@@ -29,10 +29,14 @@ void main() {
     }
   });
 
-  client.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
-    new Timer(const Duration(milliseconds: 10000), () {
-      client.initialize();
-    });
+  client.onSignalingStateChanged.listen((SignalingStateEvent e) {
+    if (e.state == Signaler.SIGNALING_STATE_OPEN) {
+      client.setChannelLimit(channelLimit);
+    } else {
+      new Timer(const Duration(milliseconds: 10000), () {
+        client.initialize();
+      });
+    }
   });
 
   client.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {
@@ -76,7 +80,7 @@ class CanvasDraw {
   int _lastSent;
   bool _isMouseDown = false;
   Point _previous;
-  
+
   CanvasDraw(CanvasElement c, ChannelClient client) {
     _element = c;
     _element.width = 770;
@@ -138,7 +142,7 @@ class CanvasDraw {
 
   void _onTouchStart(TouchEvent e) {
     e.preventDefault();
-    
+
     _isMouseDown = true;
     int x = e.targetTouches[0].page.x;
     int y = e.targetTouches[0].page.y;
@@ -161,17 +165,17 @@ class CanvasDraw {
 
     _signalMouseDown(e.offset.x, e.offset.y);
   }
-  
+
   void _signalMouseDown(int x, int y) {
     _toSend = new StartDrawPacket(x, y);
     _peerIds.forEach((String id, Point p) {
       _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
     });
   }
-  
+
   void _onTouchEnd(TouchEvent e) {
     e.preventDefault();
-    
+
     _isMouseDown = false;
     int x = e.targetTouches[0].page.x;
     int y = e.targetTouches[0].page.y;
@@ -182,7 +186,7 @@ class CanvasDraw {
     _previous = new Point(x, y);
     _signalMouseUp(x, y);
   }
-  
+
   void _onMouseUp(MouseEvent e) {
     _isMouseDown = false;
 
@@ -201,27 +205,27 @@ class CanvasDraw {
       _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
     });
   }
-  
+
   void _onTouchMove(TouchEvent e) {
     if (!_isMouseDown)
       return;
-    
+
     int x = e.targetTouches[0].page.x;
     int y = e.targetTouches[0].page.y;
-    
+
     _ctx.beginPath();
     _ctx.moveTo(_previous.x, _previous.y);
     _ctx.lineTo(x, y);
     _ctx.stroke();
     _previous = new Point(x, y);
-    
+
     int now = new DateTime.now().millisecondsSinceEpoch;
     if (now > _lastSent + _updateInterval) {
       _signalMouseMove(x, y);
       _lastSent = now;
     }
   }
-  
+
   void _onMouseMove(MouseEvent e) {
     if (!_isMouseDown)
       return;
@@ -249,7 +253,7 @@ class CanvasDraw {
     //  _client.sendArrayBufferReliable(pw.id, _toSend.toBuffer());
     //}
   }
-  
+
   void _onTick(Timer t) {
 
   }

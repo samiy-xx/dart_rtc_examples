@@ -2,10 +2,10 @@ import "dart:html";
 import "dart:async";
 import '../lib/demo_client.dart';
 
-import 'package:dart_rtc_common/rtc_common.dart';
-import 'package:dart_rtc_client/rtc_client.dart';
-//import '../../dart_rtc_common/lib/rtc_common.dart';
-//import '../../dart_rtc_client/lib/rtc_client.dart';
+//import 'package:dart_rtc_common/rtc_common.dart';
+//import 'package:dart_rtc_client/rtc_client.dart';
+import '../../dart_rtc_common/lib/rtc_common.dart';
+import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
   var key = query("#key").text;
   int channelLimit = 10;
@@ -68,6 +68,32 @@ void main() {
     }
   });
 
+  qClient.onSignalingStateChanged.listen((SignalingStateEvent e) {
+    if (e.state == Signaler.SIGNALING_STATE_OPEN) {
+      notifier.display("Signaling connected to server");
+      chat_input.contentEditable = "true";
+      chat_input.classes.remove("input_inactive");
+      chat_input.classes.add("input_active");
+      var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Connected to server");
+      chat_output.append(entry);
+      chat_output.scrollTop = chat_output.scrollHeight;
+    } else {
+      notifier.display("Signaling connection to server has closed");
+      chat_input.classes.remove("input_active");
+      chat_input.classes.add("input_inactive");
+      chat_input.contentEditable = "false";
+      chat_users.nodes.clear();
+      var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Disconnected from server");
+      chat_output.append(entry);
+      chat_output.scrollTop = chat_output.scrollHeight;
+
+      new Timer(const Duration(milliseconds: 10000), () {
+        notifier.display("Attempting to reconnect to server");
+        qClient.initialize();
+      });
+    }
+  });
+  /*
   qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
     notifier.display("Signaling connected to server ${e.message}");
     chat_input.contentEditable = "true";
@@ -94,6 +120,7 @@ void main() {
     });
 
   });
+  */
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
