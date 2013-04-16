@@ -454,10 +454,10 @@ class FileManager {
 
   FileManager._internal() {
     _em = new EntryManager();
-    _fileAddedStreamController = new StreamController<TmpFile>.broadcast();
+    _fileAddedStreamController = new StreamController<TmpFile>();
     window.requestFileSystem(1024*1024*5)
     .then(onFileSystem)
-    .catchError((AsyncError e) => onError(e.error));
+    .catchError((e) => onError(e));
   }
 
 
@@ -466,7 +466,7 @@ class FileManager {
 
     fs.root.getDirectory(_rootDir)
       .then(onDirectory)
-      .catchError((AsyncError e) {
+      .catchError((e) {
         fs.root.createDirectory(_rootDir).then(onDirectory);
     });
   }
@@ -484,9 +484,9 @@ class FileManager {
 
   void removeFile(String fileName) {
     _dir.getFile(fileName).then((FileEntry fe) {
-      fe.remove().then((f) => update()).catchError((AsyncError e) => onError(e.error));
+      fe.remove().then((f) => update()).catchError((e) => onError(e));
     })
-    .catchError((AsyncError e) => onError(e.error));
+    .catchError((e) => onError(e));
   }
 
   void writeBuffer(ArrayBuffer buffer, String name) {
@@ -502,14 +502,14 @@ class FileManager {
       fe.createWriter().then((FileWriter fw) {
         fw.write(b);
 
-        if (_fileAddedStreamController.hasSubscribers)
+        if (_fileAddedStreamController.hasListener)
           _fileAddedStreamController.add(new TmpFile(b.size, name));
         print("Blob saved to disk");
         completer.complete(true);
         update();
       });
     })
-    .catchError((AsyncError e) {
+    .catchError((e) {
       new Logger().Error("Error creating file");
       onError(e.error);
     });
@@ -521,7 +521,7 @@ class FileManager {
     .then((FileEntry fe) {
       fe.createWriter().then((FileWriter fw) {
         fw.write(f);
-        if (_fileAddedStreamController.hasSubscribers) {
+        if (_fileAddedStreamController.hasListener) {
           print ("notify listeners");
           _fileAddedStreamController.add(new TmpFile(f.size, f.name));
         }
@@ -529,7 +529,7 @@ class FileManager {
         update();
       });
     })
-    .catchError((AsyncError e) {
+    .catchError((e) {
       new Logger().Error("Error creating file");
       onError(e.error);
     });
