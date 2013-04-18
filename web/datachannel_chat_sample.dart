@@ -93,34 +93,7 @@ void main() {
       });
     }
   });
-  /*
-  qClient.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
-    notifier.display("Signaling connected to server ${e.message}");
-    chat_input.contentEditable = "true";
-    chat_input.classes.remove("input_inactive");
-    chat_input.classes.add("input_active");
-    var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Connected to server");
-    chat_output.append(entry);
-    chat_output.scrollTop = chat_output.scrollHeight;
-  });
 
-  qClient.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
-    notifier.display("Signaling connection to server has closed (${e.message})");
-    chat_input.classes.remove("input_active");
-    chat_input.classes.add("input_inactive");
-    chat_input.contentEditable = "false";
-    chat_users.nodes.clear();
-    var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Disconnected from server");
-    chat_output.append(entry);
-    chat_output.scrollTop = chat_output.scrollHeight;
-
-    new Timer(const Duration(milliseconds: 10000), () {
-      notifier.display("Attempting to reconnect to server");
-      qClient.initialize();
-    });
-
-  });
-  */
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryBufferCompleteEvent) {
       BinaryBufferCompleteEvent bbc = e;
@@ -131,46 +104,17 @@ void main() {
     }
   });
 
-  qClient.onPacketEvent.listen((PacketEvent e) {
-    new Logger().Debug("PacketEvent ${e.type} ${e.packet} ");
-
-    if (e.type == PACKET_TYPE_CHANNELMESSAGE) {
-      ChannelMessage cm = e.packet as ChannelMessage;
-      var entry = createChatEntry(new DateTime.now().toString(), cm.id, cm.message);
-      chat_output.append(entry);
-      chat_output.scrollTop = chat_output.scrollHeight;
-    }
-
-    else if (e.type == PACKET_TYPE_CHANNEL) {
-      ChannelPacket cp = e.packet as ChannelPacket;
-      var entry = createChatEntry(new DateTime.now().toString(), "CHANNEL", "Welcome to channel ${cp.channelId}. Channel has ${cp.users} users and has a limit of ${cp.limit} concurrent users");
+  qClient.onServerEvent.listen((ServerEvent e) {
+    if (e is ServerJoinEvent) {
+      ServerJoinEvent p = e;
+      var entry = createChatEntry(new DateTime.now().toString(), "CHANNEL", "Welcome to channel ${p.channel}. Channel  has a limit of ${p.limit} concurrent users");
       chat_output.append(entry);
     }
-
-    else if (e.type == PACKET_TYPE_USERMESSAGE) {
-      UserMessage um = e.packet as UserMessage;
-      var entry = createPrivateEntry(new DateTime.now().toString(), um.id, um.message);
-      chat_output.append(entry);
-      chat_output.scrollTop = chat_output.scrollHeight;
-      notifier.display("Private peer message from ${um.id}");
-    }
-
-    else if (e.type == PACKET_TYPE_ID) {
-      IdPacket id = e.packet as IdPacket;
-      DivElement u = createUserEntry(id.id);
+    else if (e is ServerParticipantJoinEvent) {
+      ServerParticipantJoinEvent p = e;
+      DivElement u = createUserEntry(p.id);
       chat_users.append(u);
-      u.onDoubleClick.listen((MouseEvent e) {
-        if (chat_input.text == "") {
-          chat_input.text = "/msg ${u.id}";
-        }
-      });
-    }
-
-    else if (e.type == PACKET_TYPE_JOIN) {
-      JoinPacket join = e.packet as JoinPacket;
-      DivElement u = createUserEntry(join.id);
-      chat_users.append(u);
-      var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "${join.id} joins the channel");
+      var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "${p.id} joins the channel");
       chat_output.append(entry);
       u.onDoubleClick.listen((MouseEvent e) {
         if (chat_input.text == "") {
@@ -179,13 +123,33 @@ void main() {
       });
     }
 
-    else if (e.type == PACKET_TYPE_BYE) {
-      ByePacket bye = e.packet as ByePacket;
-      removeUserEntry(chat_users, bye.id);
-      var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "${bye.id} leaves the channel");
+    else if (e is ServerParticipantIdEvent) {
+      ServerParticipantIdEvent p = e;
+      DivElement u = createUserEntry(p.id);
+      chat_users.append(u);
+      u.onDoubleClick.listen((MouseEvent e) {
+        if (chat_input.text == "") {
+          chat_input.text = "/msg ${u.id}";
+        }
+      });
+    }
+
+    else if (e is ServerParticipantLeftEvent) {
+      ServerParticipantLeftEvent p = e;
+      removeUserEntry(chat_users, p.id);
+      var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "${p.id} leaves the channel");
       chat_output.append(entry);
+    }
+
+    else if (e is ServerChannelMessageEvent) {
+      ServerChannelMessageEvent p = e;
+      var entry = createChatEntry(new DateTime.now().toString(), p.id, p.message);
+      chat_output.append(entry);
+      chat_output.scrollTop = chat_output.scrollHeight;
     }
   });
+
+
 
   qClient.initialize();
 }
