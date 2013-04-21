@@ -1,10 +1,9 @@
-name: sample_pubspec
+name: RtcExamples
 description: A sample application
 dependencies:
   unittest: 0.4.7+1
-  box2d: 0.1.4
+  browser: any
   dart_rtc_client:
     git: git://github.com/samiy-xx/dart_rtc_client.git
-  browser: any
-  dart_rtc_common:
-    git: git://github.com/samiy-xx/dart_rtc_common.git
+
+

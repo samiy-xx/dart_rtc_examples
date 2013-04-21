@@ -4,10 +4,8 @@ import "dart:crypto";
 import 'dart:json' as json;
 import '../lib/demo_client.dart';
 
-//import 'package:dart_rtc_common/rtc_common.dart';
 //import 'package:dart_rtc_client/rtc_client.dart';
 import '../../dart_rtc_client/lib/rtc_client.dart';
-import '../../dart_rtc_common/lib/rtc_common.dart';
 
 typedef void onClear();
 typedef void onEntry(String name, int size);

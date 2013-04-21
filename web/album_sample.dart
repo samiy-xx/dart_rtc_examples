@@ -3,10 +3,9 @@ import "dart:async";
 import 'dart:json' as json;
 
 import '../lib/demo_client.dart';
-//import 'package:dart_rtc_common/rtc_common.dart';
 //import 'package:dart_rtc_client/rtc_client.dart';
 import '../../dart_rtc_client/lib/rtc_client.dart';
-import '../../dart_rtc_common/lib/rtc_common.dart';
+
 
 void main() {
   final String key = query("#key").text;
