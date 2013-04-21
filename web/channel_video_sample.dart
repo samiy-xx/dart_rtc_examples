@@ -60,7 +60,7 @@ void main() {
     if (e.state == Signaler.SIGNALING_STATE_OPEN) {
       notifier.display("Signaling connected to server");
       qClient.setChannelLimit(channelLimit);
-    } else {
+    } else if (e.state == Signaler.SIGNALING_STATE_CLOSED) {
       new Timer(const Duration(milliseconds: 10000), () {
         notifier.display("Attempting to reconnect to server");
         qClient.initialize();

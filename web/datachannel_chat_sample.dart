@@ -77,7 +77,7 @@ void main() {
       var entry = createChatEntry(new DateTime.now().toString(), "SYSTEM", "Connected to server");
       chat_output.append(entry);
       chat_output.scrollTop = chat_output.scrollHeight;
-    } else {
+    } else if (e.state == Signaler.SIGNALING_STATE_CLOSED){
       notifier.display("Signaling connection to server has closed");
       chat_input.classes.remove("input_active");
       chat_input.classes.add("input_inactive");

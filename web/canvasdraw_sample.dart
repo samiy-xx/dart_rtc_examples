@@ -32,7 +32,7 @@ void main() {
   client.onSignalingStateChanged.listen((SignalingStateEvent e) {
     if (e.state == Signaler.SIGNALING_STATE_OPEN) {
       client.setChannelLimit(channelLimit);
-    } else {
+    } else if (e.state == Signaler.SIGNALING_STATE_CLOSED){
       new Timer(const Duration(milliseconds: 10000), () {
         client.initialize();
       });

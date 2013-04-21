@@ -45,7 +45,7 @@ void main() {
   qClient.onSignalingStateChanged.listen((SignalingStateEvent e) {
     if (e.state == Signaler.SIGNALING_STATE_OPEN) {
       qClient.setChannelLimit(channelLimit);
-    } else {
+    } else if (e.state == Signaler.SIGNALING_STATE_CLOSED){
       new Timer(const Duration(milliseconds: 10000), () {
         qClient.initialize();
       });
