@@ -17,7 +17,7 @@ abstract class PeerPacket {
   PeerPacket(int type) : _packetType = type;
 
   Map toMap();
-  ArrayBuffer toBuffer() {
+  ByteBuffer toBuffer() {
     String toBuffer = json.stringify(toMap());
     return BinaryData.bufferFromString(toBuffer);
   }
@@ -42,7 +42,7 @@ class DirectoryEntryPacket extends PeerPacket {
     return new DirectoryEntryPacket(m['fileName'], m['fileSize']);
   }
 
-  static DirectoryEntryPacket fromBuffer(ArrayBuffer buffer) {
+  static DirectoryEntryPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -66,7 +66,7 @@ class RequestFilePacket extends PeerPacket {
     return new RequestFilePacket(m['fileName']);
   }
 
-  static RequestFilePacket fromBuffer(ArrayBuffer buffer) {
+  static RequestFilePacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -90,7 +90,7 @@ class FileNamePacket extends PeerPacket {
     return new FileNamePacket(m['fileName']);
   }
 
-  static FileNamePacket fromBuffer(ArrayBuffer buffer) {
+  static FileNamePacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -115,7 +115,7 @@ class StartDrawPacket extends PeerPacket {
     return new StartDrawPacket(m['x'], m['y']);
   }
 
-  static StartDrawPacket fromBuffer(ArrayBuffer buffer) {
+  static StartDrawPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -140,7 +140,7 @@ class UpdateDrawPacket extends PeerPacket {
     return new UpdateDrawPacket(m['x'], m['y']);
   }
 
-  static UpdateDrawPacket fromBuffer(ArrayBuffer buffer) {
+  static UpdateDrawPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -165,7 +165,7 @@ class EndDrawPacket extends PeerPacket {
     return new EndDrawPacket(m['x'], m['y']);
   }
 
-  static EndDrawPacket fromBuffer(ArrayBuffer buffer) {
+  static EndDrawPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -188,7 +188,7 @@ class UpdatePaddlePacket extends PeerPacket {
     return new UpdatePaddlePacket(m['y']);
   }
 
-  static UpdatePaddlePacket fromBuffer(ArrayBuffer buffer) {
+  static UpdatePaddlePacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -213,7 +213,7 @@ class UpdateVelocityPacket extends PeerPacket {
     return new UpdateVelocityPacket(m['x'], m['y']);
   }
 
-  static UpdateVelocityPacket fromBuffer(ArrayBuffer buffer) {
+  static UpdateVelocityPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -240,7 +240,7 @@ class UpdatePositionPacket extends PeerPacket {
     return new UpdatePositionPacket(m['x'], m['y'], m['angle']);
   }
 
-  static UpdatePositionPacket fromBuffer(ArrayBuffer buffer) {
+  static UpdatePositionPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);
@@ -261,7 +261,7 @@ class CreateBallPacket extends PeerPacket {
     return new CreateBallPacket();
   }
 
-  static CreateBallPacket fromBuffer(ArrayBuffer buffer) {
+  static CreateBallPacket fromBuffer(ByteBuffer buffer) {
     String s = BinaryData.stringFromBuffer(buffer);
     Map m = json.parse(s);
     return fromMap(m);

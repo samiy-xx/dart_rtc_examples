@@ -79,9 +79,9 @@ void main() {
       insertString("RECV: ${BinaryData.stringFromBuffer(e.buffer)}");
     }
 
-    else if (e is BinaryPeerPacketEvent) {
-      BinaryPeerPacketEvent bppe = e;
-    }
+    //else if (e is BinaryPeerPacketEvent) {
+    //  BinaryPeerPacketEvent bppe = e;
+    //}
   });
   client.initialize();
 }

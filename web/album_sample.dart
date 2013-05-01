@@ -1,7 +1,7 @@
 import "dart:html";
 import "dart:async";
 import 'dart:json' as json;
-
+import 'dart:typed_data';
 import '../lib/demo_client.dart';
 //import 'package:dart_rtc_client/rtc_client.dart';
 import '../../dart_rtc_client/lib/rtc_client.dart';
@@ -131,7 +131,7 @@ void main() {
   });
 
   reader.onLoadEnd.listen((ProgressEvent e) {
-    ArrayBuffer data = reader.result;
+    ByteBuffer data = reader.result;
     print("read buffer");
     peers.forEach((String id) {
       client.sendArrayBufferReliable(id, new FileNamePacket(currentFileName).toBuffer()).then((int i) {
@@ -234,8 +234,8 @@ class AlbumCanvas {
     return w;
   }
 
-  Future<ImageElement> setImageFromBuffer(ArrayBuffer buffer) {
-    return _setImageFromUrl(Url.createObjectUrl(new Blob([new Uint8Array.fromBuffer(buffer)])));
+  Future<ImageElement> setImageFromBuffer(ByteBuffer buffer) {
+    return _setImageFromUrl(Url.createObjectUrl(new Blob([buffer])));
   }
 
   Future<ImageElement> setImageFromBlob(Blob blob) {

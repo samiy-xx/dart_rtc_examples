@@ -2,6 +2,7 @@ import "dart:html";
 import "dart:async";
 import "dart:crypto";
 import 'dart:json' as json;
+import 'dart:typed_data';
 import '../lib/demo_client.dart';
 
 //import 'package:dart_rtc_client/rtc_client.dart';
@@ -69,9 +70,9 @@ void main() {
   });
 
   qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
-    new Logger().Debug("Peer state changed to ${e.state}");
+    //new Logger().Debug("Peer state changed to ${e.state}");
     if (e.state == PEER_STABLE) {
-      new Logger().Debug("Peer state changed to stable");
+      //new Logger().Debug("Peer state changed to stable");
       otherId = e.peerwrapper.id;
     }
   });
@@ -141,12 +142,12 @@ void main() {
       else if (packetType == PeerPacket.TYPE_REQUEST_FILE) {
         RequestFilePacket p = RequestFilePacket.fromMap(m);
         if (!isTransfering) {
-          fm.readFile(p.fileName).then((ArrayBuffer buffer) {
+          fm.readFile(p.fileName).then((ByteBuffer buffer) {
             em.disableControls();
             isTransfering = true;
             qClient.sendFile(otherId, buffer).then((int b) {
               em.enableControls();
-              new Logger().Debug("FILE SENT");
+              //new Logger().Debug("FILE SENT");
               isTransfering = false;
             });
           });
@@ -487,8 +488,8 @@ class FileManager {
     .catchError((e) => onError(e));
   }
 
-  void writeBuffer(ArrayBuffer buffer, String name) {
-    Blob b = new Blob([new Uint8Array.fromBuffer(buffer)]);
+  void writeBuffer(ByteBuffer buffer, String name) {
+    Blob b = new Blob([buffer]);
     print("Saving blob ${b.size} bytes");
     saveBlob(b, name);
   }
@@ -508,7 +509,7 @@ class FileManager {
       });
     })
     .catchError((e) {
-      new Logger().Error("Error creating file");
+      //new Logger().Error("Error creating file");
       onError(e.error);
     });
     return completer.future;
@@ -528,13 +529,13 @@ class FileManager {
       });
     })
     .catchError((e) {
-      new Logger().Error("Error creating file");
+      //new Logger().Error("Error creating file");
       onError(e.error);
     });
 
   }
 
-  Future<ArrayBuffer> readFile(String name) {
+  Future<ByteBuffer> readFile(String name) {
     Completer completer = new Completer();
 
     _dir.getFile(name)
