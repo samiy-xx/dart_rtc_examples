@@ -82,17 +82,14 @@ void main() {
       if (_start == null)
         _start = new DateTime.now();
 
-
       BinaryChunkEvent bce = e;
       receivedTotal += bce.bytes;
       int elapsed = new DateTime.now().millisecondsSinceEpoch - _start.millisecondsSinceEpoch;
-      if (elapsed > 0 && receivedTotal > 0) {
-        elapsed = elapsed ~/ 1000;
-        if (elapsed > 0) {
-          int b = (receivedTotal ~/ 1024) ~/ elapsed;
-          kbs.text = "$b kbs";
-        }
-      }
+      int bpms = receivedTotal ~/ elapsed;
+      int bps = bpms * 1000;
+      int kbps = bps ~/ 1024;
+      kbs.text = "$kbps KB/s";
+
       em.setProgressCompletion(receivedTotal, bce.bytesTotal);
       em.setProgressMax(bce.totalSequences);
       em.setProgressValue(bce.sequence);

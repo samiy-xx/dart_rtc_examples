@@ -92,7 +92,7 @@ void main() {
 
     else if (e is BinaryChunkEvent) {
       BinaryChunkEvent bce = e;
-      print(bce.sequence);
+
       if (progress.style.display == "none")
         progress.style.display = "block";
       progress.max = bce.totalSequences;
@@ -106,7 +106,7 @@ void main() {
 
     else if (e is BinaryChunkWroteEvent) {
       BinaryChunkWroteEvent bcwrote = e;
-      print("Wrote");
+
       if (progress.style.display == "none")
         progress.style.display = "block";
       progress.max = bcwrote.totalSequences;
@@ -230,7 +230,7 @@ class AlbumCanvas {
 
   int getWidth() {
     int w = _canvas.parent.clientWidth;
-    print(w);
+
     return w;
   }
 
