@@ -24,8 +24,9 @@ void main() {
   DateTime _start;
   List<String> requestedFiles = new List<String>();
   bool isTransfering = false;
+  List<Entry> entriesToSend;
 
-  ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+  PeerClient qClient = new PeerClient(new WebSocketDataSource("ws://192.168.0.103:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true)
@@ -57,17 +58,28 @@ void main() {
       // for canary, peer state change doesnt seem to fire on canary
       otherId = e.peerwrapper.id;
       fm.getEntries().then((List<Entry> entries) {
-        for (Entry entry in entries) {
-          entry.getMetadata().then((Metadata m) {
-            //qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(entry.name, m.size));
-            qClient.sendArrayBufferReliable(otherId, new DirectoryEntryPacket(entry.name, m.size).toBuffer()).then((int i) {
-              print("Sent directory entry");
-            });
+        entriesToSend = entries;
+        if (entriesToSend.length == 0)
+          return;
+        var entry = entriesToSend[0];
+        entry.getMetadata().then((Metadata m) {
+          qClient.sendArrayBufferReliable(otherId, new DirectoryEntryPacket(entry.name, m.size).toBuffer()).then((int i) {
+
           });
-        }
+        });
+        //for (Entry entry in entries) {
+        //  entry.getMetadata().then((Metadata m) {
+        //    //qClient.sendPeerPacket(otherId, new DirectoryEntryPacket(entry.name, m.size));
+        //    qClient.sendArrayBufferReliable(otherId, new DirectoryEntryPacket(entry.name, m.size).toBuffer()).then((int i) {
+        //      print("Sent directory entry");
+        //    });
+        //  });
+        //}
       });
     }
   });
+
+
 
   qClient.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
     //new Logger().Debug("Peer state changed to ${e.state}");
@@ -85,11 +97,12 @@ void main() {
       BinaryChunkEvent bce = e;
       receivedTotal += bce.bytes;
       int elapsed = new DateTime.now().millisecondsSinceEpoch - _start.millisecondsSinceEpoch;
+      try {
       int bpms = receivedTotal ~/ elapsed;
       int bps = bpms * 1000;
       int kbps = bps ~/ 1024;
       kbs.text = "$kbps KB/s";
-
+      } catch (e) {}
       em.setProgressCompletion(receivedTotal, bce.bytesTotal);
       em.setProgressMax(bce.totalSequences);
       em.setProgressValue(bce.sequence);
@@ -103,7 +116,7 @@ void main() {
     else if (e is BinaryFileCompleteEvent) {
       print("BINARYFILECOMPLETE");
       BinaryFileCompleteEvent bfce = e;
-
+      _start = null;
       fm.saveBlob(bfce.blob, currentRequestedFile).then((bool saved) {
         currentRequestedFile = null;
         receivedTotal = 0;
@@ -139,7 +152,7 @@ void main() {
       else if (packetType == PeerPacket.TYPE_REQUEST_FILE) {
         RequestFilePacket p = RequestFilePacket.fromMap(m);
         if (!isTransfering) {
-          fm.readFile(p.fileName).then((ByteBuffer buffer) {
+          /*fm.readFile(p.fileName).then((ByteBuffer buffer) {
             em.disableControls();
             isTransfering = true;
             qClient.sendFile(otherId, buffer).then((int b) {
@@ -147,8 +160,17 @@ void main() {
               //new Logger().Debug("FILE SENT");
               isTransfering = false;
             });
+          });*/
+          fm.getFile(p.fileName).then((File f) {
+            em.disableControls();
+            isTransfering = true;
+            qClient.sendFile(otherId, f).then((int b) {
+              em.enableControls();
+              //new Logger().Debug("FILE SENT");
+              isTransfering = false;
+            });
           });
-        }
+       }
       }
     }
   });
@@ -378,7 +400,7 @@ class EntryManager {
     CheckboxInputElement cbx = e.target;
     DivElement parent = cbx.parent.parent;
     DivElement container = parent.parent;
-    SpanElement span = parent.queryAll("span")[1];
+    SpanElement span = parent.queryAll("span").elementAt(1);
     String fileName = span.text;
 
     List<String> files = container == _localFiles ? _selectedLocalFiles : _selectedRemoteFiles;
@@ -532,6 +554,14 @@ class FileManager {
 
   }
 
+  Future<File> getFile(String name) {
+    Completer<File> completer = new Completer<File>();
+    _dir.getFile(name).then((FileEntry fe) {
+      fe.file().then((File f) =>  completer.complete(f));
+    });
+
+    return completer.future;
+  }
   Future<ByteBuffer> readFile(String name) {
     Completer completer = new Completer();
 

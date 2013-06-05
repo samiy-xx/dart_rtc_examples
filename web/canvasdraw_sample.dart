@@ -10,7 +10,7 @@ void main() {
   final String key = query("#key").text;
   final int channelLimit = 10;
 
-  ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+  PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true)
@@ -72,14 +72,14 @@ class CanvasDraw {
   //List<DataPeerWrapper> _peerIds;
   Map<String, Point> _peerIds;
   PeerPacket _toSend;
-  ChannelClient _client;
+  PeerClient _client;
   Timer _timer;
   const int _updateInterval = 30;
   int _lastSent;
   bool _isMouseDown = false;
   Point _previous;
 
-  CanvasDraw(CanvasElement c, ChannelClient client) {
+  CanvasDraw(CanvasElement c, PeerClient client) {
     _element = c;
     _element.width = 770;
     _element.height = 400;

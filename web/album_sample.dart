@@ -24,7 +24,7 @@ void main() {
   List<String> peers = new List<String>();
   final int channelLimit = 10;
 
-  ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+  PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true)

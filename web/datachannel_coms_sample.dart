@@ -12,7 +12,7 @@ void main() {
   String reliableString = "This string is sent and expects a future to return bool";
   Timer t;
 
-  ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+  PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(false)
   .setRequireVideo(false)
   .setRequireDataChannel(true)

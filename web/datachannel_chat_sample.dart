@@ -14,7 +14,7 @@ void main() {
   DivElement chat_users = query("#chat_users");
   final int KEY_ENTER = 13;
 
-  ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+  PeerClient qClient = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   //.setChannel("abc")
   .setRequireAudio(false)
   .setRequireVideo(false)

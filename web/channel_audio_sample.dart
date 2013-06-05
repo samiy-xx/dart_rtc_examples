@@ -15,8 +15,8 @@ void main() {
   mm.setMainContainer("#main");
   mm.setChildContainer("#aux");
   AudioContainer ac = mm.addAudioContainer("main_user", "main");
-  
-  ChannelClient client = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+
+  PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(true)
   .setRequireVideo(false)
   .setRequireDataChannel(false)
