@@ -58,9 +58,9 @@ void main() {
   });
 
   client.onPeerStateChangeEvent.listen((PeerStateChangedEvent e) {
-    new Logger().Debug("Peer state changed to ${e.state}");
+    //new Logger().Debug("Peer state changed to ${e.state}");
     if (e.state == PEER_STABLE) {
-      new Logger().Debug("Peer state changed to stable");
+      //new Logger().Debug("Peer state changed to stable");
       otherId = e.peerwrapper.id;
     }
   });

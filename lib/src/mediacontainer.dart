@@ -10,7 +10,7 @@ abstract class MediaContainer {
   String _id;
   String _url;
   bool _isMain;
-  
+
   set id(String value) => _id = value;
   set isMain(bool value) => _isMain = value;
   String get id => _id;
@@ -30,9 +30,9 @@ abstract class MediaContainer {
   void initialize();
 
   bool isLocalStream() {
-    return _mediaStream != null && _mediaStream is LocalMediaStream;  
+    return _mediaStream != null && _mediaStream is MediaStream;
   }
-  
+
   void play() {
     _media.play();
   }
@@ -50,20 +50,20 @@ abstract class MediaContainer {
   }
 
   void detach() {
-    _media.remove();  
+    _media.remove();
   }
-  
+
   void setWidth(int w) {
     _media.style.width = _cssify(w);
   }
-  
+
   void setHeight(int h) {
     _media.style.height = _cssify(h);
   }
-  
+
   void setStream(MediaStream m) {
     _mediaStream = m;
-    if (m is LocalMediaStream)
+    if (m is MediaStream)
       mute();
 
     setUrl(Url.createObjectUrl(m));
@@ -109,7 +109,7 @@ abstract class MediaContainer {
       mst.enabled = true;
     });
   }
-  
+
   String _cssify(int m) {
     return m.toString() + "px";
   }

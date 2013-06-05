@@ -1,8 +1,9 @@
 name: RtcExamples
 description: A sample application
 dependencies:
-  unittest: 0.4.7+1
+  unittest: 0.5.5
   browser: any
+  logging_handlers: 0.5.0+2
   dart_rtc_client:
     git: git://github.com/samiy-xx/dart_rtc_client.git
 

@@ -2,11 +2,23 @@ import "dart:html";
 import "dart:async";
 import '../lib/demo_client.dart';
 
-
+import 'package:logging/logging.dart';
+import 'package:logging_handlers/logging_handlers_shared.dart';
 //import 'package:dart_rtc_client/rtc_client.dart';
 import '../../dart_rtc_client/lib/rtc_client.dart';
 
 void main() {
+  hierarchicalLoggingEnabled = true;
+  Logger.root.level = Level.OFF;
+  var pr = new PrintHandler();
+  Logger.root.onRecord.listen((LogRecord lr) {
+    pr.call(lr);
+  });
+  new Logger("dart_rtc_client.PeerConnection")..level = Level.ALL;
+  new Logger("dart_rtc_client.PeerClient")..level = Level.ALL;
+  new Logger("dart_rtc_client.SignalHandler")..level = Level.ALL;
+  new Logger("dart_rtc_client.UDPDataWriter")..level = Level.ALL;
+  new Logger("dart_rtc_client.UDPDataReader")..level = Level.ALL;
   var key = query("#key").text;
   int channelLimit = 5;
   Element c = query("#container");
@@ -17,7 +29,7 @@ void main() {
   //vm.setContainer(query("#main"));
   //VideoContainer vc = vm.addVideoContainer("main_user", "main");
   VideoContainer vc = vm.addVideoContainer("main");
-  ChannelClient qClient = new ChannelClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
+  PeerClient qClient = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   //.setChannel("abc")
   .setRequireAudio(true)
   .setRequireVideo(true)

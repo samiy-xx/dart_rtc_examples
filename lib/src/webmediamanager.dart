@@ -120,7 +120,7 @@ class WebVideoManager extends MediaManager {
     return c.first;
   }
 
-  LocalMediaStream _getLocalStream() {
+  MediaStream _getLocalStream() {
     var c = _mediaContainers.where((VideoContainer mc) => mc.isLocal);
     if (c.length == 0)
       return null;
@@ -180,7 +180,7 @@ class OldWebMediaManager extends OldMediaManager {
   /* Smaller video elements */
   DivElement _childHost;
 
-  LocalMediaStream _localStream;
+  MediaStream _localStream;
   /**
    * Factory constructor
    */
@@ -204,8 +204,8 @@ class OldWebMediaManager extends OldMediaManager {
    */
   void setMainContainer(String m) {
     _mainHost = query(m);
-    log.Debug("Setting main container $m");
-    log.Debug(_mainHost.id);
+    //log.Debug("Setting main container $m");
+    //log.Debug(_mainHost.id);
   }
 
   /**
@@ -273,15 +273,15 @@ class OldWebMediaManager extends OldMediaManager {
     DivElement host;
 
     if (main == null) {
-      log.Debug("main is null, setting it to be the host");
+      //log.Debug("main is null, setting it to be the host");
       host = _mainHost;
     } else {
-      log.Debug("host was not null, host id not child");
+      //log.Debug("host was not null, host id not child");
       host = _childHost;
       if (?target)
         host = _mainHost.id == target ? _mainHost : _childHost;
       if (host == _mainHost) {
-        log.Debug("host is now main");
+        //log.Debug("host is now main");
         moveMediaContainer(main, _childHost);
       }
     }
@@ -302,15 +302,15 @@ class OldWebMediaManager extends OldMediaManager {
     DivElement host;
 
     if (main == null) {
-      log.Debug("main is null, setting it to be the host");
+      //log.Debug("main is null, setting it to be the host");
       host = _mainHost;
     } else {
-      log.Debug("host was not null, host id not child");
+      //log.Debug("host was not null, host id not child");
       host = _childHost;
       if (?target)
         host = _mainHost.id == target ? _mainHost : _childHost;
       if (host == _mainHost) {
-        log.Debug("host is now main");
+        //log.Debug("host is now main");
         moveMediaContainer(main, _childHost);
       }
     }
@@ -358,7 +358,7 @@ class OldWebMediaManager extends OldMediaManager {
    * Removes videocontainer from it's curretn html parent node and sets it to a new one
    */
   void moveMediaContainer(MediaContainer vc, DivElement newHost) {
-    log.Debug("Moving vc ${vc.id} to new host");
+    //log.Debug("Moving vc ${vc.id} to new host");
     vc.pause();
     vc.matcher.remove();
     inject(newHost, vc);
@@ -390,10 +390,10 @@ class OldWebMediaManager extends OldMediaManager {
    * called after video container receives loadedmetadata event from the video element
    */
   void setProportions(VideoContainer vc) {
-    log.Debug("setProportions: ${vc.id}");
+   // log.Debug("setProportions: ${vc.id}");
     int width = isMain(vc) ? _mainHost.client.width : (_childHost.client.width ~/ 3) - 3;
     int height = Util.getHeight(width, vc.aspectRatio);
-    log.Debug("Width: $width Height: $height");
+    //log.Debug("Width: $width Height: $height");
 
 
     vc.video.style.width = "${width}px";
@@ -423,10 +423,10 @@ class OldWebMediaManager extends OldMediaManager {
   }
 
   MediaContainer getContainerByParent(DivElement e) {
-    log.Debug("Container size = ${_containers.length}");
+    //log.Debug("Container size = ${_containers.length}");
     for (int i = 0; i < _containers.length; i++) {
       MediaContainer vc = _containers[i];
-      log.Debug("----- ${e.id} ${vc.matcher.id}");
+      //log.Debug("----- ${e.id} ${vc.matcher.id}");
       if (vc.matcher.parent == e) {
         return vc;
       }
@@ -456,7 +456,7 @@ class OldWebMediaManager extends OldMediaManager {
 
     MediaContainer vc = getMediaContainer(id);
     if (vc == null) {
-      log.Warning("removeMediaContainerById: $id not found");
+      //log.Warning("removeMediaContainerById: $id not found");
       return;
     }
 
