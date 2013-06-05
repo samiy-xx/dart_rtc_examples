@@ -3,9 +3,9 @@ part of demo_client;
 abstract class MediaManager {
   MediaContainer getMediaContainer(String id);
   MediaContainer addMediaContainer(String id);
-  LocalMediaStream _getLocalStream();
+  MediaStream _getLocalStream();
   void setContainer(Element e);
-  
+
   String cssify(int m) {
     return m.toString() + "px";
   }

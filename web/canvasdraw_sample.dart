@@ -74,7 +74,7 @@ class CanvasDraw {
   PeerPacket _toSend;
   PeerClient _client;
   Timer _timer;
-  const int _updateInterval = 30;
+  const int _updateInterval = 10;
   int _lastSent;
   bool _isMouseDown = false;
   Point _previous;
@@ -244,7 +244,7 @@ class CanvasDraw {
   void _signalMouseMove(int x, int y) {
     _toSend = new UpdateDrawPacket(x, y);
     _peerIds.forEach((String id, Point p) {
-      _client.sendArrayBufferReliable(id, _toSend.toBuffer());
+      _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
     });
     //for (int i = 0; i < _peerIds.length; i++) {
     //  PeerWrapper pw = _peerIds[i];

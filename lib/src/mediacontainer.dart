@@ -30,7 +30,9 @@ abstract class MediaContainer {
   void initialize();
 
   bool isLocalStream() {
-    return _mediaStream != null && _mediaStream is LocalMediaStream;
+
+    return _mediaStream != null && _mediaStream is MediaStream;
+
   }
 
   void play() {
@@ -63,7 +65,9 @@ abstract class MediaContainer {
 
   void setStream(MediaStream m) {
     _mediaStream = m;
-    if (m.id == "local")
+
+    if (m is MediaStream)
+
       mute();
     //if (m is LocalMediaStream)
     //  mute();

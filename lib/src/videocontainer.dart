@@ -14,7 +14,7 @@ class VideoContainer extends MediaContainer {
     _media.onEnded.listen(_onStop);
     _media.onLoadedMetadata.listen(_onMetadata);
 
-    
+
   }
 
   void initialize([bool aux]) {
@@ -23,7 +23,7 @@ class VideoContainer extends MediaContainer {
     if (?aux)
       _media.classes.add("auxvid");
     _media.autoplay = true;
-    (_media as VideoElement).poster = _manager._poster;
+    //(_media as VideoElement).poster = _manager._poster;
   }
 
   void destroy() {
@@ -32,10 +32,16 @@ class VideoContainer extends MediaContainer {
 
   void _onMetadata(Event e) {
     VideoElement video = _media;
-    _aspectRatio = Util.aspectRatio(video.videoWidth, video.videoHeight);
+    _aspectRatio = aspectRatiox(video.videoWidth, video.videoHeight);
     //_manager.setProportions(this);
   }
-
+  static String aspectRatiox(int x, int y) {
+    double value = x.toDouble() / y.toDouble();
+    if (value > 1.7)
+      return "16:9";
+    else
+      return "4:3";
+  }
   void _onCanPlay(Event e) {
     _media.play();
   }
@@ -43,7 +49,7 @@ class VideoContainer extends MediaContainer {
    * Handle play event for video
    */
   void _onPlay(Event e) {
-    
+
   }
 
   /**

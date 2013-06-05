@@ -89,24 +89,39 @@ void main() {
     }
   });
 
+  int totalBytesSent = 0;
   qClient.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinaryChunkEvent) {
       if (_start == null)
         _start = new DateTime.now();
 
       BinaryChunkEvent bce = e;
+      if (receivedTotal == bce.bytesTotal)
+        receivedTotal = 0;
+
       receivedTotal += bce.bytes;
       int elapsed = new DateTime.now().millisecondsSinceEpoch - _start.millisecondsSinceEpoch;
+
       try {
       int bpms = receivedTotal ~/ elapsed;
       int bps = bpms * 1000;
       int kbps = bps ~/ 1024;
       kbs.text = "$kbps KB/s";
       } catch (e) {}
+
       em.setProgressCompletion(receivedTotal, bce.bytesTotal);
       em.setProgressMax(bce.totalSequences);
       em.setProgressValue(bce.sequence);
+    }
 
+    else if (e is BinaryChunkWroteEvent) {
+      BinaryChunkWroteEvent bcwrote = e;
+      totalBytesSent += bcwrote.bytes;
+      //
+      //if (progress.style.display == "none")
+      //  progress.style.display = "block";
+      //progress.max = bcwrote.totalSequences;
+      //progress.value = bcwrote.sequence;
     }
 
     else if (e is BinarySendCompleteEvent) {
@@ -119,7 +134,7 @@ void main() {
       _start = null;
       fm.saveBlob(bfce.blob, currentRequestedFile).then((bool saved) {
         currentRequestedFile = null;
-        receivedTotal = 0;
+        //receivedTotal = 0;
         requestedFiles.removeAt(0);
         if (requestedFiles.length > 0) {
           //String current = requestedFiles.removeAt(0);
@@ -137,8 +152,9 @@ void main() {
     }
 
     else if (e is BinaryBufferCompleteEvent) {
+      print("BINARYBUFFERCOMPLETE");
       BinaryBufferCompleteEvent bbc = e;
-      receivedTotal = 0;
+      //receivedTotal = 0;
       Map m = json.parse(BinaryData.stringFromBuffer(bbc.buffer));
       if (!m.containsKey('packetType'))
         return;
@@ -529,7 +545,7 @@ class FileManager {
     })
     .catchError((e) {
       //new Logger().Error("Error creating file");
-      onError(e.error);
+      onError(e);
     });
     return completer.future;
   }
