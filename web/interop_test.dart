@@ -10,14 +10,34 @@ void main() {
   setLogging();
   VideoElement local = query("#local_video");
   VideoElement remote = query("#remote_video");
+  FileUploadInputElement fuie = query("#upload");
+  PeerConnection pc;
+
   PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(true)
   .setRequireVideo(true)
   .setRequireDataChannel(true)
   .setAutoCreatePeer(true);
 
-  client.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
+  fuie.onChange.listen((Event e) {
+    client.sendFile(pc.id, fuie.files[0]);
+  });
 
+  client.onDataChannelStateChangeEvent.listen((DataChannelStateChangedEvent e) {
+    if (e.state == "open") {
+      print("Datachannel open");
+      pc = e.peerwrapper;
+    }
+  });
+
+  client.onBinaryEvent.listen((RtcEvent e) {
+    if (e is BinarySendCompleteEvent) {
+      BinarySendCompleteEvent bsce = e;
+      print("File sent");
+    }
+  });
+
+  client.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
     if (e.state == InitializationState.CHANNEL_READY) {
 
     }

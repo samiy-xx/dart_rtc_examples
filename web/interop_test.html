@@ -6,10 +6,12 @@
   </head>
 
   <body>
+    <input type="file" id="upload"/>
     <div>
       <video id="local_video" autoplay="true"></video>
       <video id="remote_video" autoplay="true"></video>
     </div>
+
     <script type="application/dart" src="interop_test.dart"></script>
     <!-- for this next line to work, your pubspec.yaml file must have a dependency on 'browser' -->
     <script src="packages/browser/dart.js"></script>
