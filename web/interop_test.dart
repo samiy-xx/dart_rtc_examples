@@ -33,7 +33,15 @@ void main() {
   client.onBinaryEvent.listen((RtcEvent e) {
     if (e is BinarySendCompleteEvent) {
       BinarySendCompleteEvent bsce = e;
-      print("File sent");
+    }
+
+    else if (e is BinaryBufferCompleteEvent) {
+      BinaryBufferCompleteEvent bbc = e;
+      print("GOT FILE");
+    }
+
+    else if (e is BinaryFileCompleteEvent) {
+      print("File complete");
     }
   });
 
