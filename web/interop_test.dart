@@ -91,4 +91,6 @@ void setLogging() {
   new Logger("dart_rtc_client.SignalHandler")..level = Level.ALL;
   new Logger("dart_rtc_client.UDPDataWriter")..level = Level.ALL;
   new Logger("dart_rtc_client.UDPDataReader")..level = Level.ALL;
+  new Logger("dart_rtc_client.TCPDataWriter")..level = Level.ALL;
+  new Logger("dart_rtc_client.TCPDataReader")..level = Level.ALL;
 }
