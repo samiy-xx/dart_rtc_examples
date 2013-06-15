@@ -13,7 +13,7 @@ class Resizer {
   int _x;
   int _y;
   Timer _timer = null;
-  const int _loopInterval = 5;
+  static const int _loopInterval = 5;
 
   Resizer(Element e, int w, int h, int x, int y) {
     _e = e;

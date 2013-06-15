@@ -1,8 +1,8 @@
 part of demo_client;
 
 abstract class MediaContainer {
-  const String CSS_HIDDEN = "hidden";
-  const String CSS_VISIBLE = "visible";
+  static const String CSS_HIDDEN = "hidden";
+  static const String CSS_VISIBLE = "visible";
 
   MediaManager _manager;
   MediaStream _mediaStream;

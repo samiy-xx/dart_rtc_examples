@@ -75,19 +75,21 @@ class RequestFilePacket extends PeerPacket {
 
 class FileNamePacket extends PeerPacket {
   String fileName;
+  int fileSize;
   int get packetType => _packetType;
 
-  FileNamePacket(this.fileName) : super(PeerPacket.TYPE_RECEIVE_FILENAME);
+  FileNamePacket(this.fileName, this.fileSize) : super(PeerPacket.TYPE_RECEIVE_FILENAME);
 
   Map toMap() {
     return {
       'packetType' : _packetType,
-      'fileName': fileName
+      'fileName': fileName,
+      'fileSize': fileSize
     };
   }
 
   static FileNamePacket fromMap(Map m) {
-    return new FileNamePacket(m['fileName']);
+    return new FileNamePacket(m['fileName'], m['fileSize']);
   }
 
   static FileNamePacket fromBuffer(ByteBuffer buffer) {

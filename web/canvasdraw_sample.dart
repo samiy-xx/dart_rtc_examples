@@ -74,7 +74,7 @@ class CanvasDraw {
   PeerPacket _toSend;
   PeerClient _client;
   Timer _timer;
-  const int _updateInterval = 10;
+  static const int _updateInterval = 10;
   int _lastSent;
   bool _isMouseDown = false;
   Point _previous;

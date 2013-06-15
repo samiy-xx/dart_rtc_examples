@@ -8,6 +8,7 @@ import '../../dart_rtc_client/lib/rtc_client.dart';
 
 
 void main() {
+  List<Blob> _blobParts = new List<Blob>();
   final String key = query("#key").text;
   DivElement album = query("#album");
   DivElement application = query("#application");
@@ -16,6 +17,8 @@ void main() {
   progress.style.display = "none";
 
   String currentFileName;
+  int currentFileSize;
+  int received = 0;
   AlbumCanvas ac = new AlbumCanvas(query("#albumcanvas"));
   Thumbnailer thumb = new Thumbnailer();
   thumb.setCanvasHeight(30);
@@ -25,7 +28,7 @@ void main() {
   final int channelLimit = 10;
 
   PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
-  .setRequireAudio(false)
+  .setRequireAudio(Browser.isFirefox)
   .setRequireVideo(false)
   .setRequireDataChannel(true)
   .setAutoCreatePeer(true);
@@ -69,6 +72,9 @@ void main() {
         int packetType = m['packetType'];
         if (packetType == PeerPacket.TYPE_RECEIVE_FILENAME) {
           currentFileName = FileNamePacket.fromMap(m).fileName;
+          currentFileSize = FileNamePacket.fromMap(m).fileSize;
+          received = 0;
+          _blobParts.clear();
         }
       }
     }
@@ -88,6 +94,29 @@ void main() {
           progress.style.display = "none";
         });
       });
+    }
+
+    if (e is BinaryBlobChunk) {
+      BinaryBlobChunk chunk = e;
+      _blobParts.add(chunk.blob);
+
+      received += chunk.blob.size;
+      if (received == currentFileSize) {
+        Blob b = new Blob(_blobParts);
+        ac.setImageFromBlob(b).then((ImageElement img) {
+          String oUrl = Url.createObjectUrl(b);
+
+          ImageElement thumbImg = new ImageElement();
+          thumbImg.onLoad.listen((Event e) {
+            query("#files").append(buildEntry(thumbImg, currentFileName, oUrl));
+          });
+          thumbImg.src = thumb.getDataUrl(img);
+
+          new Timer(const Duration(milliseconds: 2000), () {
+            progress.style.display = "none";
+          });
+        });
+      }
     }
 
     else if (e is BinaryChunkEvent) {
@@ -126,24 +155,36 @@ void main() {
     for (int i = 0; i < fuie.files.length; i++) {
       File file = fuie.files[i];
       currentFileName = file.name;
+      currentFileSize = file.size;
+      peers.forEach((String id) {
+        client.sendByteBufferReliable(id, new FileNamePacket(currentFileName, currentFileSize).toBuffer()).then((int i) {
+          client.sendFile(id, file).then((int i) {
+            int seconds = i > 0 ? i ~/ 1000 : 0;
+            print("Sent image to id $id in $seconds seconds");
+            new Timer(const Duration(milliseconds: 2000), () {
+              progress.style.display = "none";
+            });
+          });
+        });
+      });
       reader.readAsArrayBuffer(file);
     }
   });
 
   reader.onLoadEnd.listen((ProgressEvent e) {
     ByteBuffer data = reader.result;
-    print("read buffer");
-    peers.forEach((String id) {
-      client.sendArrayBufferReliable(id, new FileNamePacket(currentFileName).toBuffer()).then((int i) {
-        client.sendFile(id, data).then((int i) {
-          int seconds = i > 0 ? i ~/ 1000 : 0;
-          print("Sent image to id $id in $seconds seconds");
-          new Timer(const Duration(milliseconds: 2000), () {
-            progress.style.display = "none";
-          });
-        });
-      });
-    });
+    //print("read buffer");
+    //peers.forEach((String id) {
+    //  client.sendByteBufferReliable(id, new FileNamePacket(currentFileName).toBuffer()).then((int i) {
+    //    client.sendFile(id, data).then((int i) {
+    //      int seconds = i > 0 ? i ~/ 1000 : 0;
+    //      print("Sent image to id $id in $seconds seconds");
+    //      new Timer(const Duration(milliseconds: 2000), () {
+    //        progress.style.display = "none";
+    //      });
+    //    });
+    //  });
+    //});
     ac.setImageFromBuffer(data);
   });
 
@@ -216,8 +257,8 @@ class Thumbnailer extends CanvasThingy {
 }
 
 class AlbumCanvas {
-  const int CANVAS_WIDTH = 800;
-  const int CANVAS_HEIGHT = 500;
+  static const int CANVAS_WIDTH = 800;
+  static const int CANVAS_HEIGHT = 500;
   CanvasElement _canvas;
   CanvasRenderingContext2D _ctx;
 
