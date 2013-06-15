@@ -11,7 +11,7 @@ void main() {
   final int channelLimit = 10;
 
   PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
-  .setRequireAudio(false)
+  .setRequireAudio(Browser.isFirefox)
   .setRequireVideo(false)
   .setRequireDataChannel(true)
   .setAutoCreatePeer(true);
@@ -83,7 +83,7 @@ class CanvasDraw {
     _element = c;
     _element.width = 770;
     _element.height = 400;
-    _ctx = c.context2d;
+    _ctx = c.context2D;
     _peerIds = new Map<String, Point>();
 
     _client = client;
@@ -167,7 +167,7 @@ class CanvasDraw {
   void _signalMouseDown(int x, int y) {
     _toSend = new StartDrawPacket(x, y);
     _peerIds.forEach((String id, Point p) {
-      _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
+      _client.sendByteBufferUnReliable(id, _toSend.toBuffer());
     });
   }
 
@@ -200,7 +200,7 @@ class CanvasDraw {
   void _signalMouseUp(int x, int y) {
     _toSend = new EndDrawPacket(x, y);
     _peerIds.forEach((String id, Point p) {
-      _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
+      _client.sendByteBufferUnReliable(id, _toSend.toBuffer());
     });
   }
 
@@ -244,7 +244,7 @@ class CanvasDraw {
   void _signalMouseMove(int x, int y) {
     _toSend = new UpdateDrawPacket(x, y);
     _peerIds.forEach((String id, Point p) {
-      _client.sendArrayBufferUnReliable(id, _toSend.toBuffer());
+      _client.sendByteBufferUnReliable(id, _toSend.toBuffer());
     });
     //for (int i = 0; i < _peerIds.length; i++) {
     //  PeerWrapper pw = _peerIds[i];
