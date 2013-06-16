@@ -43,6 +43,10 @@ void main() {
     else if (e is BinaryFileCompleteEvent) {
       print("File complete");
     }
+
+    else if (e is BinaryBlobChunk) {
+      print("Got blob chunk");
+    }
   });
 
   client.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
@@ -55,7 +59,7 @@ void main() {
     }
   });
 
-  client.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
+  client.onMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
     if (e.isLocal) {
       local.src = Url.createObjectUrl(e.stream);
     } else {
@@ -63,7 +67,7 @@ void main() {
     }
   });
 
-  client.onRemoteMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
+  client.onMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
     remote.pause();
   });
 
@@ -89,8 +93,8 @@ void setLogging() {
   new Logger("dart_rtc_client.PeerConnection")..level = Level.ALL;
   new Logger("dart_rtc_client.PeerClient")..level = Level.ALL;
   new Logger("dart_rtc_client.SignalHandler")..level = Level.ALL;
-  new Logger("dart_rtc_client.UDPDataWriter")..level = Level.ALL;
-  new Logger("dart_rtc_client.UDPDataReader")..level = Level.ALL;
-  new Logger("dart_rtc_client.TCPDataWriter")..level = Level.ALL;
-  new Logger("dart_rtc_client.TCPDataReader")..level = Level.ALL;
+  //new Logger("dart_rtc_client.UDPDataWriter")..level = Level.ALL;
+  //new Logger("dart_rtc_client.UDPDataReader")..level = Level.ALL;
+  //new Logger("dart_rtc_client.TCPDataWriter")..level = Level.ALL;
+  //new Logger("dart_rtc_client.TCPDataReader")..level = Level.ALL;
 }

@@ -7,59 +7,46 @@ import '../../dart_rtc_client/lib/rtc_client.dart';
 void main() {
   var key = query("#key").text;
   int channelLimit = 5;
-  Element c = query("#container");
   Notifier notifier = new Notifier();
-  //AudioElement localAudio = query("#local_audio");
-  //AudioElement remoteAudio = query("#remote_audio");
-  WebMediaManager mm = new WebMediaManager();
-  mm.setMainContainer("#main");
-  mm.setChildContainer("#aux");
-  AudioContainer ac = mm.addAudioContainer("main_user", "main");
+  AudioElement localAudio = query("#local_audio");
+  AudioElement remoteAudio = query("#remote_audio");
 
   PeerClient client = new PeerClient(new WebSocketDataSource("ws://127.0.0.1:8234/ws"))
   .setRequireAudio(true)
-  .setRequireVideo(false)
-  .setRequireDataChannel(false)
   .setAutoCreatePeer(true);
 
   client.onInitializationStateChangeEvent.listen((InitializationStateEvent e) {
-
-    if (e.state == InitializationState.CHANNEL_READY) {
-      if (!client.setChannelLimit(channelLimit)) {
-        notifier.display("Failed to set new channel user limit");
-      }
-    }
-
     if (e.state == InitializationState.REMOTE_READY) {
       notifier.display("Joining channel $key");
       client.joinChannel(key);
     }
   });
 
-  client.onSignalingOpenEvent.listen((SignalingOpenEvent e) {
-    notifier.display("Signaling connected to server ${e.message}");
-  });
-
-  client.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
+  client.onMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
     if (e.isLocal) {
-       mm.setLocalStream(e.stream);
+      notifier.display("Got local stream, setting source to #local_audio");
+      localAudio.src = Url.createObjectUrl(e.stream);
+      localAudio.muted = true;
     } else {
-      mm.addAudioStream(e.stream, e.peerWrapper.id);
+      notifier.display("Got remote stream, setting source to #remote_audio");
+      remoteAudio.src = Url.createObjectUrl(e.stream);
     }
   });
 
-  client.onRemoteMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
+  client.onMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
     notifier.display("Remote stream removed");
-    mm.removeRemoteStream(e.pw.id);
+    remoteAudio.pause();
   });
 
-  client.onSignalingCloseEvent.listen((SignalingCloseEvent e) {
-    notifier.display("Signaling connection to server has closed (${e.message})");
-
-    new Timer(const Duration(milliseconds: 10000), () {
-      notifier.display("Attempting to reconnect to server");
-      client.initialize();
-    });
+  client.onSignalingStateChanged.listen((SignalingStateEvent e) {
+    if (e.state == Signaler.SIGNALING_STATE_OPEN) {
+      client.setChannelLimit(channelLimit);
+    } else if (e.state == Signaler.SIGNALING_STATE_CLOSED){
+      notifier.display("Signaling connection to server has closed");
+      new Timer(const Duration(milliseconds: 10000), () {
+        client.initialize();
+      });
+    }
   });
 
   client.initialize();

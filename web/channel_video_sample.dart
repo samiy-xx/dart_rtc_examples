@@ -53,7 +53,7 @@ void main() {
     }
   });
 
-  qClient.onRemoteMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
+  qClient.onMediaStreamAvailableEvent.listen((MediaStreamAvailableEvent e) {
     print("media");
     if (e.isLocal) {
       vm.getVideoContainer("main").setStream(e.stream);
@@ -64,7 +64,7 @@ void main() {
 
   });
 
-  qClient.onRemoteMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
+  qClient.onMediaStreamRemovedEvent.listen((MediaStreamRemovedEvent e) {
     notifier.display("Remote stream removed");
     vm.removeVideoContainer(e.pw.id);
   });

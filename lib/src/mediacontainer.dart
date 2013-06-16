@@ -78,6 +78,7 @@ abstract class MediaContainer {
   void setUrl(String url) {
     _media.src = url;
     _url = url;
+    _media.play();
   }
 
   void muteVideoTracks() {

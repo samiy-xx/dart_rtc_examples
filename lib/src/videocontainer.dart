@@ -13,8 +13,6 @@ class VideoContainer extends MediaContainer {
     _media.onPause.listen(_onPause);
     _media.onEnded.listen(_onStop);
     _media.onLoadedMetadata.listen(_onMetadata);
-
-
   }
 
   void initialize([bool aux]) {
@@ -35,6 +33,7 @@ class VideoContainer extends MediaContainer {
     _aspectRatio = aspectRatiox(video.videoWidth, video.videoHeight);
     //_manager.setProportions(this);
   }
+
   static String aspectRatiox(int x, int y) {
     double value = x.toDouble() / y.toDouble();
     if (value > 1.7)
@@ -42,6 +41,7 @@ class VideoContainer extends MediaContainer {
     else
       return "4:3";
   }
+
   void _onCanPlay(Event e) {
     _media.play();
   }
